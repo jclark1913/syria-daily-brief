@@ -12,21 +12,20 @@ def get_sdfpress_data(date):
 
 def get_news_articles_by_page(page_num=1, stop_timestamp=False):
     """"""
-    #cloudscraper setup
-    scraper = cfscrape.create_scraper()
-    response = scraper.get(
-        f"https://webcache.googleusercontent.com/search?q=cache:https://sdf-press.com/?s&paged={page_num}", headers=DEFAULT_HEADERS
-    )
 
-    #bs4 setup
+    # bs4 setup
     # response = requests.get(
     #     f"https://sdf-press.com/?s&paged={page_num}", headers=DEFAULT_HEADERS
     # )
-    soup = BeautifulSoup(response.content, "html.parser")
+    # soup = BeautifulSoup(response.content, "html.parser")
 
-    print(response.content)
-    print("Response received. Waiting 10 secs...")
-    time.sleep(1)
+    scraper = cfscrape.create_scraper(delay=10)
+    print(scraper.get(f"https://sdf-press.com/?s&paged={page_num}").content)
+
+
+    # print(response.content)
+    # print("Response received. Waiting 10 secs...")
+    # time.sleep(1)
 
     articles = soup.find_all("article", class_="listing-item")
     print("Articles collected. Waiting 10 secs...")
