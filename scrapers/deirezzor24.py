@@ -5,13 +5,23 @@ import datetime
 import math
 
 from bs4 import BeautifulSoup
-from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS
+from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS, get_generic_timestamp
 
 
 def get_deirezzor24_data(date):
     """Scrapes DEZ24 and collects all articles up to a given time limit. Returns
     all data as a dictionary.
+
+    NOTE: Uses get_generic_timestamp given lack of actual dates on DEZ24. Assumes
+    date is in dd-mm-YYYY format for ease of use.
     """
+
+    # Convert date to unix timestamp
+    lower_time_limit = get_generic_timestamp(date)
+
+    scraped_articles = get_news_articles_by_page(stop_timestamp=lower_time_limit)
+
+    return scraped_articles
 
 
 def get_news_articles_by_page(page_num=1, stop_timestamp=False):
@@ -19,8 +29,60 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
     TODO: Handle server timeout while looping
     """
 
+    # bs4 setup
+    response = requests.get(
+        f"https://deirezzor24.net/category/%d8%a3%d8%ae%d8%a8%d8%a7%d8%b1/page/{page_num}/"
+    )
+    soup = BeautifulSoup(response.content, "html.parser")
+    articles = soup.find("div", class_="vce-loop-wrap").find_all("article")
 
-def get_article_text_and_desc(article_link):
+    # List of articles to be returned
+    article_list = []
+
+    count = 1
+
+    # Gathers article info for each post on single page
+
+    for a in articles:
+        # Get article link
+        content = a.find("h2", class_="entry-title")
+        link = content.find("a").get("href")
+
+        # Destructure last_updated and article_text
+        [last_updated, article_text] = list(
+            get_article_text_and_last_updated(link).values()
+        )
+
+        # Get current timestamp for article
+        current_timestamp = get_approx_timestamp_from_last_updated(last_updated)
+
+        # Verifies that current_timestamp is less than (earlier than) limit,
+        # breaks loop if so.
+        if stop_timestamp and current_timestamp < stop_timestamp:
+            break
+
+        article = {
+            "title": content.text,
+            "date_posted": current_timestamp,
+            "link": link,
+            "full_text": article_text,
+        }
+
+        print(count)
+        count += 1
+        article_list.append(article)
+
+    # Recursively call function for next page until stop_timestamp is reached
+    if stop_timestamp and current_timestamp >= stop_timestamp:
+        next_page_num = page_num + 1
+        article_list += get_news_articles_by_page(
+            page_num=next_page_num, stop_timestamp=stop_timestamp
+        )
+
+    return article_list
+
+
+def get_article_text_and_last_updated(article_link):
     """Gets the text from a single article as well as the description in Arabic
     explaining how recently the article was published.
     """
@@ -33,13 +95,11 @@ def get_article_text_and_desc(article_link):
     paragraphs = soup.find("div", class_="entry-content").find_all("p", recursive=False)
     article_text = "\n\n".join(paragraph.text for paragraph in paragraphs)
 
-    # Get description to generate timestamp
-    description = soup.find("span", class_="updated").text
+    # Get last_updated to generate timestamp
+    last_updated = soup.find("span", class_="updated").text
 
-    return {
-        "last_updated": description,
-        "article_text": article_text
-            }
+    return {"last_updated": last_updated, "article_text": article_text}
+
 
 def get_approx_timestamp_from_last_updated(last_updated):
     """Converts Arabic phrase in description to approximate timestamp.
@@ -51,7 +111,6 @@ def get_approx_timestamp_from_last_updated(last_updated):
 
     # get current date
     current_timestamp = math.floor(datetime.datetime.now().timestamp())
-    print("TIME NOW IS ", current_timestamp)
 
     # subtract total seconds from desc from current date to generate approx timestamp
     return current_timestamp - get_total_seconds_from_last_updated(last_updated)
@@ -89,9 +148,6 @@ def get_total_seconds_from_last_updated(last_updated):
     else:
         duration = arabic_posted[1]
         quantity = int(arabic_posted[0])
-
-    print("Duration = ", duration)
-    print("Quantity = ", quantity)
 
     # Generate # of seconds from Arabic time units dictionary
     for unit in ARABIC_TIME_UNITS:
