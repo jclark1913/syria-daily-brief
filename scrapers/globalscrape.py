@@ -1,3 +1,6 @@
+import time
+import datetime
+
 DEFAULT_HEADERS = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
 }
@@ -31,3 +34,12 @@ ARABIC_TIME_UNITS = {
     "year": {"arabic": ["سنة", "سنوات", "سنين", "سنتين"],
                 "value": 31556926},
 }
+
+def get_generic_timestamp(date):
+    """Takes date input and converts it to Unix timestamp.
+
+    NOTE: Assumes date is in dd-mm-YYYY format.
+    """
+
+    # Uses time and datetime libs to generate Unix timestamp
+    return time.mktime(datetime.datetime.strptime(date, "%d-%m-%Y").timetuple())
