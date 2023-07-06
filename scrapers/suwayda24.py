@@ -14,10 +14,31 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
     """"""
 
 def get_article_text(article_link):
-    """"""
+    """Returns text from a single article in Arabic"""
+
+    # bs4 setup
+    response = requests.get(article_link, headers=DEFAULT_HEADERS)
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    # Identifies paragraphs and gathers text content from paragraphs
+    paragraphs = soup.find("div", class_="entry").find_all("p", recursive=False)
+    article_text = "\n\n".join(paragraph.text for paragraph in paragraphs)
+
+    return article_text
 
 def get_approx_timestamp_from_last_updated(last_updated):
-    """"""
+    """Converts Arabic phrase in description to approximate timestamp.
+
+    Assuming current time is 6/20/23 9pm (1687309200):
+
+    "5 ساعات مضت\n" -> (1687291200)
+    """
+
+    # get current date
+    current_timestamp = math.floor(datetime.datetime.now().timestamp())
+
+    # subtract total seconds from desc from current date to generate approx timestamp
+    return current_timestamp - get_total_seconds_from_last_updated(last_updated)
 
 def get_total_seconds_from_last_updated(last_updated):
     """Returns the total number of seconds from the posted before section of an
