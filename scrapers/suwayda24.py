@@ -20,7 +20,17 @@ def get_approx_timestamp_from_last_updated(last_updated):
     """"""
 
 def get_total_seconds_from_last_updated(last_updated):
-    """"""
+    """Returns the total number of seconds from the posted before section of an
+    article. Useful for generating a unix timestamp by subtracting result from
+    current time.
+
+    examples:
+
+    "5 ساعات مضت \n" -> 18000 (3600 * 5)
+    "8 سنوات مضت \n" -> 252455408 (63113852 * 8)
+    "دقيقتين مضت \n" -> 120 (60 * 2)
+
+    """
 
     # Return variable
     total_seconds = 0
