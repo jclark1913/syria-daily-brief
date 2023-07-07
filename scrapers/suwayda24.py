@@ -53,7 +53,10 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
         print("FROM WEBPAGE: ", last_updated)
 
         # Get current timestamp for article
-        current_timestamp = get_approx_timestamp_from_last_updated(last_updated)
+        if u"\u200f" in last_updated:
+            current_timestamp = get_approx_timestamp_from_last_updated(last_updated)
+        else:
+            current_timestamp = get_s24_eng_timestamp(last_updated)
 
         # Verifies that current_timestamp is less than (earlier than) limit,
         # breaks loop if so.
@@ -161,4 +164,10 @@ def sanitize_last_updated(last_updated):
     """
 
     return last_updated.replace(u"\u200f", "")
+
+
+def get_s24_eng_timestamp(last_updated):
+    """Returns a unix timestamp for mm/dd/Y timestamps"""
+
+    return time.mktime(datetime.datetime.strptime(last_updated, "%m/%d/%Y").timetuple())
 
