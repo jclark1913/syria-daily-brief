@@ -54,7 +54,7 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
         title = a.find("a", class_=None).text
         article = {
             "title": title,
-            "date_posted": date_posted,
+            "date_posted": current_timestamp,
             "link": a.find("a", class_="more-link").get("href"),
         }
 
