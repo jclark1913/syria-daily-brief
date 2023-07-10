@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+import time
 
 db = SQLAlchemy()
 
@@ -33,6 +34,7 @@ class Collection(db.Model):
 
     created_at = db.Column(
         db.Integer,
+        default=int(time.time()),
         nullable=False,
     )
 
