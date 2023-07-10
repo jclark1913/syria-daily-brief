@@ -7,20 +7,14 @@ from bs4 import BeautifulSoup
 from globalscrape import DEFAULT_HEADERS, ARABIC_LATIN_MONTHS
 
 
-def get_enabbeladi_data(date):
+def get_enabbeladi_data(stop_timestamp):
     """Scrapes enabbeladi.net and collects all articles up to a given time limit.
     Returns all this data as a dictionary.
-
-    NOTE: Dates currently must follow YYYY-mm-dd format.
     """
 
-    lower_time_limit = get_timestamp_for_time_limit(date)
-
-    scraped_articles = get_news_articles_by_page(stop_timestamp=lower_time_limit)
+    scraped_articles = get_news_articles_by_page(stop_timestamp=stop_timestamp)
 
     return scraped_articles
-
-    # Convert date to unix timestamp.
 
 
 def get_news_articles_by_page(page_num=1, stop_timestamp=False):
@@ -121,11 +115,11 @@ def get_arabic_timestamp(date):
     )
 
 
-def get_timestamp_for_time_limit(date):
-    """Takes date input and converts it to Unix timestamp
+# def get_timestamp_for_time_limit(date):
+#     """Takes date input and converts it to Unix timestamp
 
-    NOTE: Assumes date is in YYYY-mm-dd format.
-    """
+#     NOTE: Assumes date is in YYYY-mm-dd format.
+#     """
 
-    # Uses time and datetime libs to generate Unix timestamp
-    return time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d").timetuple())
+#     # Uses time and datetime libs to generate Unix timestamp
+#     return time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d").timetuple())
