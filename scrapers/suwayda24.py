@@ -6,21 +6,15 @@ import math
 import unicodedata
 
 from bs4 import BeautifulSoup
-from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS, get_generic_timestamp
+from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS
 
 
-def get_suwayda24_data(date):
+def get_suwayda24_data(stop_timestamp):
     """Scrapes Suwayda24 and collects all articles up to a given time limit. Returns
     all data as a dictionary.
-
-    NOTE: Uses get_generic_timestamp given lack of actual dates on Suwayda24. Assumes
-    date is in dd-mm-YYYY format for ease of use.
     """
 
-    # Convert date to unix timestamp
-    lower_time_limit = get_generic_timestamp(date)
-
-    scraped_articles = get_news_articles_by_page(stop_timestamp=lower_time_limit)
+    scraped_articles = get_news_articles_by_page(stop_timestamp=stop_timestamp)
 
     return scraped_articles
 
@@ -50,7 +44,6 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
         content = a.find("h2", class_="post-box-title")
         link = content.find("a").get("href")
         last_updated = a.find("span", class_="tie-date").text
-        print("FROM WEBPAGE: ", last_updated)
 
         # Get current timestamp for article
         if u"\u200f" in last_updated:
@@ -136,8 +129,6 @@ def get_total_seconds_from_last_updated(last_updated):
 
     # The word for "one" in Arabic (minus gender ending)
     arabic_one = "واحد"
-
-    print("IN HELPER FUNC: ", arabic_posted)
 
     # Ascertains duration (Arabic) and number of units
     if len(arabic_posted) == 1:
