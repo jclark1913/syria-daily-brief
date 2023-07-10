@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 def connect_db(app):
     """Connects this database to Flask app.
 
@@ -12,11 +13,12 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
+
 class Collection(db.Model):
     """The top-level table. A collection points to a specific grouping of
     scraped data."""
 
-    __tablename__ = 'collections'
+    __tablename__ = "collections"
 
     id = db.Column(
         db.Integer,
@@ -34,15 +36,21 @@ class Collection(db.Model):
         nullable=False,
     )
 
+
 class Entry(db.Model):
     """A single data point scraped from a website. Linked to a collection."""
 
-    __tablename__ = 'entries'
+    __tablename__ = "entries"
 
     id = db.Column(
         db.Integer,
         primary_key=True,
         autoincrement=True,
+    )
+
+    collection_id = db.Column(
+        db.Integer,
+        db.ForeignKey("collections.id", ondelete="CASCADE"),
     )
 
     title = db.Column(
@@ -70,11 +78,3 @@ class Entry(db.Model):
     ai_summary = db.Column(
         db.Text,
     )
-
-    collection_id = db.Column(
-        db.Integer,
-        db.ForeignKey('collections.id', ondelete='CASCADE'),
-    )
-
-
-
