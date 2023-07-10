@@ -63,9 +63,7 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
         # Generates article object w/ date posted using datetime.fromtimestamp
         article = {
             "title": title,
-            "date_posted": datetime.datetime.fromtimestamp(date_posted).strftime(
-                "%d/%m/%Y"
-            ),
+            "date_posted": date_posted,
             "link": a.find("a").get("href"),
         }
 
