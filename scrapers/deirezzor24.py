@@ -5,21 +5,15 @@ import datetime
 import math
 
 from bs4 import BeautifulSoup
-from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS, get_generic_timestamp
+from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS
 
 
-def get_deirezzor24_data(date):
-    """Scrapes DEZ24 and collects all articles up to a given time limit. Returns
-    all data as a dictionary.
-
-    NOTE: Uses get_generic_timestamp given lack of actual dates on DEZ24. Assumes
-    date is in dd-mm-YYYY format for ease of use.
+def get_deirezzor24_data(stop_timestamp):
+    """Scrapes DEZ24 and collects all articles until the timestamp is reached.
+    Returns all data as a dictionary.
     """
 
-    # Convert date to unix timestamp
-    lower_time_limit = get_generic_timestamp(date)
-
-    scraped_articles = get_news_articles_by_page(stop_timestamp=lower_time_limit)
+    scraped_articles = get_news_articles_by_page(stop_timestamp=stop_timestamp)
 
     return scraped_articles
 
