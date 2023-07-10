@@ -30,7 +30,8 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
 
     # bs4 setup
     response = requests.get(
-        f"https://www.enabbaladi.net/archives/category/online/page/{page_num}"
+        f"https://www.enabbaladi.net/archives/category/online/page/{page_num}",
+        headers=DEFAULT_HEADERS
     )
     soup = BeautifulSoup(response.content, "html.parser")
     articles = soup.find_all("div", class_="one-post")
