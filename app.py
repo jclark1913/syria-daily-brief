@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 from flask import Flask
 
-from models import connect_db
+from models import db, connect_db, Collection, Entry
 
 load_dotenv()
 
