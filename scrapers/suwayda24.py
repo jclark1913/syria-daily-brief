@@ -3,7 +3,6 @@ import requests
 import time
 import datetime
 import math
-import unicodedata
 
 from bs4 import BeautifulSoup
 from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS
