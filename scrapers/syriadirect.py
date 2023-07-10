@@ -6,18 +6,12 @@ import datetime
 from bs4 import BeautifulSoup
 from globalscrape import DEFAULT_HEADERS
 
-def get_syriadirect_data(date):
+def get_syriadirect_data(stop_timestamp):
     """Scrapes syriadirect.org and collects all articles up to a given time limit. Returns
-    all of this data as an object.
-
-    NOTE: Assumes that date is in YYYY-mm-dd format as used in Syria Direct timestamps. Will
-    likely need to change in future once user can input custom dates.
+    all of this data as a dictionary.
     """
 
-    # Convert input date to unix timestamp
-    lower_time_limit = get_timestamp(date)
-
-    scraped_articles = get_news_articles_by_page(stop_timestamp=lower_time_limit)
+    scraped_articles = get_news_articles_by_page(stop_timestamp=stop_timestamp)
 
     return scraped_articles
 
@@ -28,7 +22,8 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
 
     # bs4 setup
     response = requests.get(
-        f"https://syriadirect.org/%D8%A2%D8%AE%D8%B1-%D8%A7%D9%84%D8%AA%D9%82%D8%A7%D8%B1%D9%8A%D8%B1/page/{page_num}/?lang=ar"
+        f"https://syriadirect.org/%D8%A2%D8%AE%D8%B1-%D8%A7%D9%84%D8%AA%D9%82%D8%A7%D8%B1%D9%8A%D8%B1/page/{page_num}/?lang=ar",
+        headers=DEFAULT_HEADERS
         )
     soup = BeautifulSoup(response.content, "html.parser")
     articles = soup.find("div", class_="fusion-posts-container").find_all("article")
@@ -51,7 +46,7 @@ def get_news_articles_by_page(page_num=1, stop_timestamp=False):
         title = a.find("h2").find("a").text
         article = {
             "title": title,
-            "date_posted": date_posted,
+            "date_posted": current_timestamp,
             "link": a.find("h2").find("a").get("href")
         }
 
