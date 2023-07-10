@@ -7,18 +7,12 @@ from bs4 import BeautifulSoup
 from globalscrape import DEFAULT_HEADERS
 
 
-def get_sana_data(date):
+def get_sana_data(stop_timestamp):
     """Scrapes sana.sy and collects all posts up to a given time limit. Returns
-    all this data as object.
-
-    NOTE: Assumes that date is in YYYY-mm-dd format like sana. Will likely need
-    to change in future once user can input custom dates.
+    all this data as dictionary.
     """
 
-    # Convert date to unix timestamp.
-    lower_time_limit = get_timestamp(date)
-
-    scraped_articles = get_news_articles_by_page(stop_timestamp=lower_time_limit)
+    scraped_articles = get_news_articles_by_page(stop_timestamp=stop_timestamp)
 
     return scraped_articles
 
