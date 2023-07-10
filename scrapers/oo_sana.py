@@ -17,13 +17,53 @@ class SANA_Scraper(Base_Scraper):
         """
 
         # Generate correct url from template
-        url = self.url_template.format(page_num)
+        url = self.url_template.format(page_num=page_num)
         print(url)
 
         # bs4 setup
         soup = self.get_soup(url=url)
+        articles = soup.find_all("article", class_="item-list")
 
+        # List of articles to be returned
+        article_list = []
 
+        count = 1
+        # Gathers article info for each post on single page
+        for a in articles:
+            # identifies date posted and generates Unix timestamp
+            date_posted = a.find("span", class_="tie-date").text
+            current_timestamp = self.get_timestamp(date_posted)
+
+            # Breaks loop if timestamp reached
+            if self.reached_time_limit_loop(
+                stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
+            ):
+                break
+
+            # Gets title from card + creates dict of basic data
+            title = a.find("a", class_=None).text
+            article = {
+                "title": title,
+                "date_posted": current_timestamp,
+                "link": a.find("a", class_="more-link").get("href"),
+            }
+
+            print(count)
+            count += 1
+            # Adds dict attribute for article text then appends to article_list
+            article["full_text"] = self.get_article_text(article["link"])
+            article_list.append(article)
+
+        # Recursively calls method for next page until stop_timestamp reached.
+        if self.reached_time_limit_recurse(
+            stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
+        ):
+            next_page_num = page_num + 1
+            article_list += self.get_news_articles_by_page(
+                page_num=next_page_num, stop_timestamp=stop_timestamp
+            )
+
+        return article_list
 
     def get_article_text(self, article_link):
         """Concatenates all paragraph elements in article into a single string and
