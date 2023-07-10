@@ -6,8 +6,14 @@ import datetime
 from bs4 import BeautifulSoup
 from globalscrape import DEFAULT_HEADERS, ARABIC_LATIN_MONTHS
 
-def get_hfl_data(date):
-    """"""
+def get_hfl_data(stop_timestamp):
+    """Scrapes HFL and collects all articles until timestamp is reached. Returns
+    all data in a dictionary
+    """
+
+    scraped_articles = get_news_articles_by_page(stop_timestamp=stop_timestamp)
+
+    return scraped_articles
 
 def get_news_articles_by_page(page_num=1, stop_timestamp=False):
     """Scrapes a single page of HFL articles until time limit reached.
