@@ -18,7 +18,6 @@ class SANA_Scraper(Base_Scraper):
 
         # Generate correct url from template
         url = self.url_template.format(page_num=page_num)
-        print(url)
 
         # bs4 setup
         soup = self.get_soup(url=url)
@@ -43,8 +42,9 @@ class SANA_Scraper(Base_Scraper):
             # Gets title from card + creates dict of basic data
             title = a.find("a", class_=None).text
             article = {
-                "title": title,
                 "date_posted": current_timestamp,
+                "title": title,
+                "publication": self.publication,
                 "link": a.find("a", class_="more-link").get("href"),
             }
 
