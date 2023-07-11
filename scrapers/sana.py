@@ -1,91 +1,86 @@
-import requests
-
 import time
 import datetime
 
-from bs4 import BeautifulSoup
-from globalscrape import DEFAULT_HEADERS
+from base_scraper import Base_Scraper
 
 
-def get_sana_data(stop_timestamp):
-    """Scrapes sana.sy and collects all posts up to a given time limit. Returns
-    all this data as dictionary.
-    """
+class SANA_Scraper(Base_Scraper):
+    def __init__(self):
+        self.url_template = "https://sana.sy/?cat=29582&paged={page_num}"
+        self.publication = "SANA (Syrian Arab News Network)"
 
-    scraped_articles = get_news_articles_by_page(stop_timestamp=stop_timestamp)
+    # def get_data(self, stop_timestamp):
 
-    return scraped_articles
+    def get_news_articles_by_page(self, page_num=1, stop_timestamp=False):
+        """Scrapes a single page of sana articles until time limit reached
+        TODO: Handle server timeout while looping
+        """
 
+        # Generate correct url from template
+        url = self.url_template.format(page_num=page_num)
 
-def get_news_articles_by_page(page_num=1, stop_timestamp=False):
-    """Scrapes a single page of sana articles until time limit reached
-    TODO: Handle server timeout while looping
-    """
+        # bs4 setup
+        soup = self.get_soup(url=url)
+        articles = soup.find_all("article", class_="item-list")
 
-    # bs4 setup
-    response = requests.get(
-        f"https://sana.sy/?cat=29582&paged={page_num}", headers=DEFAULT_HEADERS
-    )
-    soup = BeautifulSoup(response.content, "html.parser")
-    articles = soup.find_all("article", class_="item-list")
+        # List of articles to be returned
+        article_list = []
 
-    # List of articles to be returned
-    article_list = []
+        count = 1
+        # Gathers article info for each post on single page
+        for a in articles:
+            # identifies date posted and generates Unix timestamp
+            date_posted = a.find("span", class_="tie-date").text
+            current_timestamp = self.get_timestamp(date_posted)
 
-    count = 1
-    # Gathers article info for each post on single page
-    for a in articles:
-        # identifies date posted and generates Unix timestamp
-        date_posted = a.find("span", class_="tie-date").text
-        current_timestamp = get_timestamp(date_posted)
+            # Breaks loop if timestamp reached
+            if self.reached_time_limit_loop(
+                stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
+            ):
+                break
 
-        # Verifies that current_timestamp is less than (earlier than) limit,
-        # breaks loop if so.
-        if stop_timestamp and current_timestamp < stop_timestamp:
-            break
+            # Gets title from card + creates dict of basic data
+            title = a.find("a", class_=None).text
+            article = {
+                "date_posted": current_timestamp,
+                "title": title,
+                "publication": self.publication,
+                "link": a.find("a", class_="more-link").get("href"),
+            }
 
-        # Gets title from card + creates dict of basic data
-        title = a.find("a", class_=None).text
-        article = {
-            "title": title,
-            "date_posted": current_timestamp,
-            "link": a.find("a", class_="more-link").get("href"),
-        }
+            print(count)
+            count += 1
+            # Adds dict attribute for article text then appends to article_list
+            article["full_text"] = self.get_article_text(article["link"])
+            article_list.append(article)
 
-        print(count)
-        count += 1
-        # Adds dict attribute for article text then appends to article_list
-        article["full_text"] = get_article_text(article["link"])
-        article_list.append(article)
+        # Recursively calls method for next page until stop_timestamp reached.
+        if self.reached_time_limit_recurse(
+            stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
+        ):
+            next_page_num = page_num + 1
+            article_list += self.get_news_articles_by_page(
+                page_num=next_page_num, stop_timestamp=stop_timestamp
+            )
 
-    # Recursively call function for next page until stop_timestamp is reached
-    if stop_timestamp and current_timestamp >= stop_timestamp:
-        next_page_num = page_num + 1
-        article_list += get_news_articles_by_page(
-            page_num=next_page_num, stop_timestamp=stop_timestamp
-        )
+        return article_list
 
-    return article_list
+    def get_article_text(self, article_link):
+        """Concatenates all paragraph elements in article into a single string and
+        returns it"""
 
+        # bs4 setup
+        soup = self.get_soup(url=article_link)
 
-def get_article_text(article_link):
-    """Concatenates all paragraph elements in article into a single string and
-    returns it"""
+        # iterates thru paragraphs and concatenates text content
+        paragraphs = soup.find("div", class_="entry").find_all("p", recursive=False)
+        return "\n\n".join(paragraph.text for paragraph in paragraphs)
 
-    # bs4 setup
-    response = requests.get(article_link, headers=DEFAULT_HEADERS)
-    soup = BeautifulSoup(response.content, "html.parser")
+    def get_timestamp(self, date):
+        """Takes date input and converts it to Unix timestamp
 
-    # iterates thru paragraphs and concatenates text content
-    paragraphs = soup.find("div", class_="entry").find_all("p", recursive=False)
-    return "\n\n".join(paragraph.text for paragraph in paragraphs)
+        NOTE: Assumes date is in YYYY-mm-dd format.
+        """
 
-
-def get_timestamp(date):
-    """Takes date input and converts it to Unix timestamp
-
-    NOTE: Assumes date is in YYYY-mm-dd format.
-    """
-
-    # Uses time and datetime libs to generate Unix timestamp
-    return time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d").timetuple())
+        # Uses time and datetime libs to generate Unix timestamp
+        return time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d").timetuple())
