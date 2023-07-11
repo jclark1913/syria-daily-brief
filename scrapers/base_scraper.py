@@ -2,9 +2,10 @@ import requests
 
 import time
 import datetime
+import math
 
 from bs4 import BeautifulSoup
-from globalscrape import DEFAULT_HEADERS
+from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS
 
 class Base_Scraper:
 
@@ -54,3 +55,65 @@ class Base_Scraper:
             return True
 
         return False
+
+
+    # NOTE: These time-related methods are stored as static methods in the hopes
+    # that they can be updated and maintained to include more websites using a
+    # similar format.
+    @staticmethod
+    def get_approx_timestamp_from_last_updated_AR(last_updated):
+        """Converts Arabic phrase in description to approximate timestamp.
+
+        Assuming current time is 6/20/23 9pm (1687309200):
+
+        "5 ساعات ago" -> (1687291200)
+        """
+
+        # get current date
+        current_timestamp = math.floor(datetime.datetime.now().timestamp())
+
+        # subtract total seconds from desc from current date to generate approx timestamp
+        return current_timestamp - Base_Scraper.get_total_seconds_from_last_updated_AR(last_updated)
+
+    @staticmethod
+    def get_total_seconds_from_last_updated_AR(last_updated):
+        """Returns the total number of seconds from the posted before section of an
+        article. Useful for generating a unix timestamp by subtracting result from
+        current time.
+
+        NOTE: Currently works with both Deir Ezzor 24 and Suwayda 24.
+
+        examples:
+
+        "5 ساعات ago" -> 18000 (3600 * 5)
+        "8 سنوات ago" -> 252455408 (63113852 * 8)
+        "دقيقتين ago" -> 120 (60 * 2)
+
+        """
+
+        # Return variable
+        total_seconds = 0
+
+        # Create array of Arabic unit + quantity (if present)
+        arabic_posted = [word for word in last_updated.split() if word != "ago" and word != "منذ"]
+
+        # The word for "one" in Arabic (minus gender ending)
+        arabic_one = "واحد"
+
+        # Ascertains duration (Arabic) and number of units
+        if len(arabic_posted) == 1:
+            duration = arabic_posted[0]
+            quantity = 2
+        elif arabic_one in arabic_posted[1]:
+            duration = arabic_posted[0]
+            quantity = 1
+        else:
+            duration = arabic_posted[1]
+            quantity = int(arabic_posted[0])
+
+        # Generate # of seconds from Arabic time units dictionary
+        for unit in ARABIC_TIME_UNITS:
+            if duration in ARABIC_TIME_UNITS[unit]["arabic"]:
+                total_seconds = ARABIC_TIME_UNITS[unit]["value"] * quantity
+
+        return total_seconds
