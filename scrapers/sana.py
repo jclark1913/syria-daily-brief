@@ -46,7 +46,7 @@ class SANA(Base_Scraper):
                 "link": a.find("a", class_="more-link").get("href"),
             }
 
-            print(count)
+            self.entry_added_message(count=count, page_num=page_num)
             count += 1
             # Adds dict attribute for article text then appends to article_list
             article["full_text"] = self.get_article_text(article["link"])
@@ -57,6 +57,7 @@ class SANA(Base_Scraper):
             stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
         ):
             next_page_num = page_num + 1
+            self.next_page_message(count=count, page_num=next_page_num)
             article_list += self.get_news_articles_by_page(
                 page_num=next_page_num, stop_timestamp=stop_timestamp
             )
