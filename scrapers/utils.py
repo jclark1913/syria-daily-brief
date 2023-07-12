@@ -24,7 +24,7 @@ ARABIC_LATIN_MONTHS = {
 }
 
 # Map of Arabic months (standard fusHa names) to their corresponding calendar number
-ARABIC_STD_MONTHS = {
+ARABIC_STANDARD_MONTHS = {
     "كانون الثاني": "1",
     "شباط": "2",
     "آذار": "3",
