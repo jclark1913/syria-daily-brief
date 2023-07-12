@@ -1,5 +1,7 @@
 from base_scraper import Base_Scraper
 
+import utils as utils
+
 
 class DEZ24(Base_Scraper):
     def __init__(self):
@@ -34,7 +36,7 @@ class DEZ24(Base_Scraper):
             )
 
             # Get current timestamp for article
-            current_timestamp = Base_Scraper.get_approx_timestamp_from_last_updated_AR(
+            current_timestamp = utils.get_approx_timestamp_from_last_updated_AR(
                 last_updated
             )
 
