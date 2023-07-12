@@ -54,8 +54,10 @@ class DEZ24(Base_Scraper):
                 "full_text": article_text,
             }
 
-            print(count)
+            # Send console message
+            self.entry_added_message(count=count, page_num=page_num)
             count += 1
+
             article_list.append(article)
 
         # Recursively calls method for next page until stop_timestamp reached.
@@ -63,6 +65,8 @@ class DEZ24(Base_Scraper):
             stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
         ):
             next_page_num = page_num + 1
+            # Send console message
+            self.next_page_message(page_num=next_page_num)
             article_list += self.get_news_articles_by_page(
                 page_num=next_page_num, stop_timestamp=stop_timestamp
             )
