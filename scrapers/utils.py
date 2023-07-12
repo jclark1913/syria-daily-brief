@@ -4,7 +4,7 @@ import math
 
 # Default headers for all requests
 DEFAULT_HEADERS = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36"
 }
 
 # Map of Arabic Latin months to their corresponding calendar number
@@ -20,7 +20,7 @@ ARABIC_LATIN_MONTHS = {
     "سبتمبر": "9",
     "أكتوبر": "10",
     "نوفمبر": "11",
-    "ديسمبر": "12"
+    "ديسمبر": "12",
 }
 
 # Map of Arabic months (standard fusHa names) to their corresponding calendar number
@@ -36,23 +36,18 @@ ARABIC_STD_MONTHS = {
     "أيلول": "9",
     "تشرين الأول": "10",
     "تشرين الثاني": "11",
-    "كانون الأول": "12"
+    "كانون الأول": "12",
 }
 
 ARABIC_TIME_UNITS = {
-    "minute": {"arabic": ["دقيقة", "دقائق", "دقيقتين"],
-                "value": 60},
-    "hour": {"arabic": ["ساعة", "ساعات", "ساعتين"],
-                "value": 3600},
-    "day": {"arabic": ["يوم", "أيام", "يومين"],
-            "value": 86400},
-    "week": {"arabic": ["أسبوع", "أسابيع", "أسبوعين"],
-                "value": 604800},
-    "month": {"arabic": ["شهر", "أشهر", "شهرين"],
-                "value": 2629743},
-    "year": {"arabic": ["سنة", "سنوات", "سنين", "سنتين"],
-                "value": 31556926},
+    "minute": {"arabic": ["دقيقة", "دقائق", "دقيقتين"], "value": 60},
+    "hour": {"arabic": ["ساعة", "ساعات", "ساعتين"], "value": 3600},
+    "day": {"arabic": ["يوم", "أيام", "يومين"], "value": 86400},
+    "week": {"arabic": ["أسبوع", "أسابيع", "أسبوعين"], "value": 604800},
+    "month": {"arabic": ["شهر", "أشهر", "شهرين"], "value": 2629743},
+    "year": {"arabic": ["سنة", "سنوات", "سنين", "سنتين"], "value": 31556926},
 }
+
 
 def get_generic_timestamp(date):
     """Takes date input and converts it to Unix timestamp.
@@ -80,6 +75,7 @@ def get_approx_timestamp_from_last_updated_AR(last_updated):
     # subtract total seconds from desc from current date to generate approx timestamp
     return current_timestamp - get_total_seconds_from_last_updated_AR(last_updated)
 
+
 def get_total_seconds_from_last_updated_AR(last_updated):
     """Returns the total number of seconds from the posted before section of an
     article. Useful for generating a unix timestamp by subtracting result from
@@ -99,7 +95,11 @@ def get_total_seconds_from_last_updated_AR(last_updated):
     total_seconds = 0
 
     # Create array of Arabic unit + quantity (if present)
-    arabic_posted = [word for word in last_updated.split() if word != "ago" and word != "منذ"]
+    arabic_posted = [
+        remove_RLM_char_from_str(word)
+        for word in last_updated.split()
+        if word != "ago" and word != "منذ"
+    ]
 
     # The word for "one" in Arabic (minus gender ending)
     arabic_one = "واحد"
@@ -121,3 +121,11 @@ def get_total_seconds_from_last_updated_AR(last_updated):
             total_seconds = ARABIC_TIME_UNITS[unit]["value"] * quantity
 
     return total_seconds
+
+
+def remove_RLM_char_from_str(str):
+    """Removes unicode 'RIGHT-TO-LEFT' character from a given string and returns
+    it.
+    """
+
+    return str.replace("\u200f", "")
