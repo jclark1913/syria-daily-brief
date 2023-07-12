@@ -2,6 +2,8 @@ import requests
 
 from bs4 import BeautifulSoup
 
+from utils import DEFAULT_HEADERS
+
 
 class Base_Scraper:
     """This is the default class for each web scraper. It contains base functionality
@@ -35,6 +37,18 @@ class Base_Scraper:
         soup = BeautifulSoup(response.content, "html.parser")
 
         return soup
+
+    def entry_added_message(self, count=1, page_num=1):
+        """Prints a terminal message to the user when a new entry is added."""
+
+        print(f"Added {count} entries from page {page_num}")
+
+    def next_page_message(self, count=1, page_num=1):
+        """Prints a terminal message when the page number increments during
+        scraping
+        """
+
+        print(f"Continuing to page {page_num}")
 
     # NOTE: These conditions are left in the base class to reduce repetition.
     # Should they change in the future I only need to update them here rather
