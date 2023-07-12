@@ -58,6 +58,7 @@ def get_generic_timestamp(date):
     # Uses time and datetime libs to generate Unix timestamp
     return time.mktime(datetime.datetime.strptime(date, "%d-%m-%Y").timetuple())
 
+
 def get_timestamp_from_arabic_latin_date(date):
     """Converts Arabic date in 'YYYY, dd month' format to unix timestamp"""
 
