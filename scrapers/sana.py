@@ -9,8 +9,6 @@ class SANA(Base_Scraper):
         self.url_template = "https://sana.sy/?cat=29582&paged={page_num}"
         self.publication = "SANA (Syrian Arab News Network)"
 
-    # def get_data(self, stop_timestamp):
-
     def get_news_articles_by_page(self, page_num=1, stop_timestamp=False):
         """Scrapes a single page of SANA articles until time limit reached"""
 
