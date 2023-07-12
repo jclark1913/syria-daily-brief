@@ -23,6 +23,7 @@ class SANA(Base_Scraper):
         article_list = []
 
         count = 1
+
         # Gathers article info for each post on single page
         for a in articles:
             # identifies date posted and generates Unix timestamp

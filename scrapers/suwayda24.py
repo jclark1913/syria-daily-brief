@@ -99,3 +99,4 @@ class Suwayda24(Base_Scraper):
         return time.mktime(
             datetime.datetime.strptime(last_updated, "%m/%d/%Y").timetuple()
         )
+
