@@ -58,6 +58,19 @@ def get_generic_timestamp(date):
     # Uses time and datetime libs to generate Unix timestamp
     return time.mktime(datetime.datetime.strptime(date, "%d-%m-%Y").timetuple())
 
+def get_timestamp_from_arabic_latin_date(date):
+    """Converts Arabic date in 'YYYY, dd month' format to unix timestamp"""
+
+    # Get number of Arabic month and replace it in string
+    for month in ARABIC_LATIN_MONTHS:
+        if month in date:
+            translated_date = date.replace(month, ARABIC_LATIN_MONTHS[month])
+
+    # Get unix timestamp from translated date
+    return time.mktime(
+        datetime.datetime.strptime(translated_date, "%m %d, %Y").timetuple()
+    )
+
 
 def get_approx_timestamp_from_last_updated_AR(last_updated):
     """Converts Arabic phrase in description to approximate timestamp.
