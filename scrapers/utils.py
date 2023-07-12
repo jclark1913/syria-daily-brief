@@ -63,9 +63,6 @@ def get_generic_timestamp(date):
     # Uses time and datetime libs to generate Unix timestamp
     return time.mktime(datetime.datetime.strptime(date, "%d-%m-%Y").timetuple())
 
-# NOTE: These time-related methods are stored as static methods in the hopes
-# that they can be updated and maintained to include more websites using a
-# similar format.
 
 def get_approx_timestamp_from_last_updated_AR(last_updated):
     """Converts Arabic phrase in description to approximate timestamp.
@@ -73,6 +70,8 @@ def get_approx_timestamp_from_last_updated_AR(last_updated):
     Assuming current time is 6/20/23 9pm (1687309200):
 
     "5 ساعات ago" -> (1687291200)
+
+    NOTE: Currently works with both Deir Ezzor 24 and Suwayda 24.
     """
 
     # get current date
