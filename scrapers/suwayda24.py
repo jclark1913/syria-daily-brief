@@ -1,163 +1,101 @@
-import requests
+from base_scraper import Base_Scraper
 
 import time
 import datetime
-import math
 
-from bs4 import BeautifulSoup
-from globalscrape import DEFAULT_HEADERS, ARABIC_TIME_UNITS
+import utils as utils
 
 
-def get_suwayda24_data(stop_timestamp):
-    """Scrapes Suwayda24 and collects all articles up to a given time limit. Returns
-    all data as a dictionary.
-    """
+class Suwayda24(Base_Scraper):
+    def __init__(self):
+        self.url_template = "https://suwayda24.com/?cat=%2A&paged={page_num}"
+        self.publication = "Suwayda 24"
 
-    scraped_articles = get_news_articles_by_page(stop_timestamp=stop_timestamp)
+    def get_news_articles_by_page(self, page_num=1, stop_timestamp=False):
+        """Scrapes a single page of Suwayda24 articles until time limit is reached."""
 
-    return scraped_articles
+        # Generate correct url from template
+        url = self.url_template.format(page_num=page_num)
 
-
-
-def get_news_articles_by_page(page_num=1, stop_timestamp=False):
-    """Scrapes a single page of Suwayda24 articles until time limit is reached.
-    TODO: Handle server timeout while looping
-    """
-
-    # bs4 setup
-    response = requests.get(
-        f"https://suwayda24.com/?cat=%2A&paged={page_num}", headers=DEFAULT_HEADERS
-    )
-    soup = BeautifulSoup(response.content, "html.parser")
-    articles = soup.find("div", class_="post-listing archive-box").find_all("article")
-
-    # List of articles to be returned
-    article_list = []
-
-    count = 1
-
-    # Gathers article info for each post on a single page
-
-    for a in articles:
-        # Get article link
-        content = a.find("h2", class_="post-box-title")
-        link = content.find("a").get("href")
-        last_updated = a.find("span", class_="tie-date").text
-
-        # Get current timestamp for article
-        if u"\u200f" in last_updated:
-            current_timestamp = get_approx_timestamp_from_last_updated(last_updated)
-        else:
-            current_timestamp = get_s24_eng_timestamp(last_updated)
-
-        # Verifies that current_timestamp is less than (earlier than) limit,
-        # breaks loop if so.
-        if stop_timestamp and current_timestamp < stop_timestamp:
-            break
-
-        article = {
-            "title": content.text,
-            "date_posted": current_timestamp,
-            "link": link,
-            "full_text": get_article_text(link),
-        }
-
-        print(count)
-        count += 1
-        article_list.append(article)
-        if count > 10:
-            break
-
-    # Recursively call function for next page until stop_timestamp is reached
-    if stop_timestamp and current_timestamp >= stop_timestamp:
-        next_page_num = page_num + 1
-        article_list += get_news_articles_by_page(
-            page_num=next_page_num, stop_timestamp=stop_timestamp
+        # bs4 setup
+        soup = self.get_soup(url=url)
+        articles = soup.find("div", class_="post-listing archive-box").find_all(
+            "article"
         )
 
-    return article_list
+        # List of articles to be returned
+        article_list = []
 
+        count = 1
 
-def get_article_text(article_link):
-    """Returns text from a single article in Arabic"""
+        for a in articles:
+            # Get article link
+            content = a.find("h2", class_="post-box-title")
+            link = content.find("a").get("href")
+            last_updated = a.find("span", class_="tie-date").text
 
-    # bs4 setup
-    response = requests.get(article_link, headers=DEFAULT_HEADERS)
-    soup = BeautifulSoup(response.content, "html.parser")
+            # Get current timestamp for article. NOTE: This checks to see if the
+            # unicode right-to-left character is in the span. If not, s24 is
+            # using a numeric date.
+            if "\u200f" in last_updated:
+                current_timestamp = utils.get_approx_timestamp_from_last_updated_AR(
+                    last_updated
+                )
+            else:
+                current_timestamp = self.get_s24_eng_timestamp(last_updated)
 
-    # Identifies paragraphs and gathers text content from paragraphs
-    paragraphs = soup.find("div", class_="entry").find_all("p", recursive=False)
-    article_text = "\n\n".join(paragraph.text for paragraph in paragraphs)
+            # Verifies that current_timestamp is less than (earlier than) limit,
+            # breaks loop if so.
+            if self.reached_time_limit_loop(
+                stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
+            ):
+                break
 
-    return article_text
+            article = {
+                "date_posted": current_timestamp,
+                "title": content.text,
+                "publication": self.publication,
+                "link": link,
+                "full_text": self.get_article_text(link),
+            }
 
+            self.entry_added_message(count=count, page_num=page_num)
+            count += 1
+            article_list.append(article)
+            if count > 10:
+                break
 
-def get_approx_timestamp_from_last_updated(last_updated):
-    """Converts Arabic phrase in description to approximate timestamp.
+        # Recursively call function for next page until stop_timestamp is reached
+        if self.reached_time_limit_recurse(
+            stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
+        ):
+            next_page_num = page_num + 1
 
-    Assuming current time is 6/20/23 9pm (1687309200):
+            # Send console message
+            self.next_page_message(count=count, page_num=next_page_num)
 
-    "5 ساعات مضت\n" -> (1687291200)
-    """
+            article_list += self.get_news_articles_by_page(
+                page_num=next_page_num, stop_timestamp=stop_timestamp
+            )
 
-    # get current date
-    current_timestamp = math.floor(datetime.datetime.now().timestamp())
+        return article_list
 
-    # subtract total seconds from desc from current date to generate approx timestamp
-    return current_timestamp - get_total_seconds_from_last_updated(last_updated)
+    def get_article_text(self, article_link):
+        """Concatenates all paragraph elements in article into a single string and
+        returns it"""
 
+        # bs4 setup
+        soup = self.get_soup(url=article_link)
 
-def get_total_seconds_from_last_updated(last_updated):
-    """Returns the total number of seconds from the posted before section of an
-    article. Useful for generating a unix timestamp by subtracting result from
-    current time.
+        # iterates thru paragraphs and concatenates text content
+        paragraphs = soup.find("div", class_="entry").find_all("p", recursive=False)
+        article_text = "\n\n".join(paragraph.text for paragraph in paragraphs)
 
-    examples:
+        return article_text
 
-    "5 ساعات مضت \n" -> 18000 (3600 * 5)
-    "8 سنوات مضت \n" -> 252455408 (63113852 * 8)
-    "دقيقتين مضت \n" -> 120 (60 * 2)
+    def get_s24_eng_timestamp(last_updated):
+        """Returns a unix timestamp for mm/dd/Y timestamps"""
 
-    """
-
-    # Return variable
-    total_seconds = 0
-
-    # Create array of Arabic unit + quantity (if present)
-    arabic_posted = [sanitize_last_updated(word) for word in last_updated.split() if word != "مضت"]
-
-    # The word for "one" in Arabic (minus gender ending)
-    arabic_one = "واحد"
-
-    # Ascertains duration (Arabic) and number of units
-    if len(arabic_posted) == 1:
-        duration = arabic_posted[0]
-        quantity = 2
-    elif arabic_one in arabic_posted[1]:
-        duration = arabic_posted[0]
-        quantity = 1
-    else:
-        duration = arabic_posted[1]
-        quantity = int(arabic_posted[0])
-
-    # Generate # of seconds from Arabic time units dictionary
-    for unit in ARABIC_TIME_UNITS:
-        if duration in ARABIC_TIME_UNITS[unit]["arabic"]:
-            total_seconds = ARABIC_TIME_UNITS[unit]["value"] * quantity
-
-    return total_seconds
-
-
-def sanitize_last_updated(last_updated):
-    """Removes unicode 'RIGHT-TO-LEFT' character from a given string and returns
-    it.
-    """
-
-    return last_updated.replace(u"\u200f", "")
-
-
-def get_s24_eng_timestamp(last_updated):
-    """Returns a unix timestamp for mm/dd/Y timestamps"""
-
-    return time.mktime(datetime.datetime.strptime(last_updated, "%m/%d/%Y").timetuple())
-
+        return time.mktime(
+            datetime.datetime.strptime(last_updated, "%m/%d/%Y").timetuple()
+        )
