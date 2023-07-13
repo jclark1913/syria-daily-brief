@@ -65,6 +65,11 @@ class Entry(db.Model):
         nullable=False,
     )
 
+    title_translated = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
     publication = db.Column(
         db.Text,
         nullable=False,
@@ -72,6 +77,12 @@ class Entry(db.Model):
 
     full_text = db.Column(
         db.Text,
+        nullable=True,
+    )
+
+    full_text_translated = db.Column(
+        db.text,
+        nullable=True,
     )
 
     link = db.Column(
