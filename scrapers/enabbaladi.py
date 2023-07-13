@@ -6,7 +6,7 @@ import datetime
 import utils as utils
 
 
-class Enabbaladi(Base_Scraper):
+class EnabBaladi(Base_Scraper):
     def __init__(self):
         self.url_template = (
             "https://www.enabbaladi.net/archives/category/online/page/{page_num}"
