@@ -27,6 +27,11 @@ class Collection(db.Model):
         autoincrement=True,
     )
 
+    name = db.Column(
+        db.Varchar(200),
+        nullable=False,
+    )
+
     description = db.Column(
         db.Text,
         nullable=True,
