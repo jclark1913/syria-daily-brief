@@ -14,3 +14,21 @@ app.config['SQLALCHEMY_ECHO'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 connect_db(app)
+
+## COLLECTIONS
+
+# GET ALL COLLECTIONS
+
+# GET SINGLE COLLECTION
+
+# UPDATE COLLECTION DETAILS
+
+# DELETE COLLECTION
+    # Migrate entries in collection to another collection
+
+# COPY FROM COLLECTION TO COLLECTION
+
+
+## ENTRIES
+
+# GET ALL ENTRIES FOR GIVEN COLLECTION
