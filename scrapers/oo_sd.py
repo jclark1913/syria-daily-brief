@@ -1,3 +1,4 @@
+import time
 import datetime
 
 from base_scraper import Base_Scraper
