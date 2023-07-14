@@ -5,7 +5,7 @@ db.drop_all()
 db.create_all()
 
 # Create a test collection
-test_collection = Collection(id=1, description="TEST")
+test_collection = Collection(id=1, name="Test_collection", description="TEST")
 
 db.session.add(test_collection)
 db.session.commit()
