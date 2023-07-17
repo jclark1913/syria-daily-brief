@@ -118,6 +118,9 @@ def update_collection(collection_id):
 
     return jsonify({"message": "Collection updated"})
 
+
+# DELETE Collection
+# TODO: Handle migration of entries when collection is deleted
 @app.delete("/api/collections/<int:collection_id>")
 def delete_collection(collection_id):
     """Deletes a given collection
@@ -130,7 +133,7 @@ def delete_collection(collection_id):
 
     db.session.commit()
 
-    return jsonify({'message': 'Deleted collection'})
+    return jsonify({"message": "Deleted collection"})
 
 
 # DELETE COLLECTION
@@ -142,6 +145,21 @@ def delete_collection(collection_id):
 ############# ENTRIES
 
 # GET ALL ENTRIES FOR GIVEN COLLECTION
+@app.get("/api/collections/<int:collection_id>/entries")
+def get_entries_from_collection(collection_id):
+    """Returns all entries from a given collection
+
+    Returns: {'collection_name': {entry, entry, ...}}
+    """
+
+    curr_coll = Collection.query.get_or_404(collection_id)
+    entries = Entry.query.filter_by(collection_id=collection_id)
+    entry_schema = EntrySchema(many=True)
+
+    result = entry_schema.dump(entries)
+
+    return jsonify({curr_coll.name: result})
+
 
 # TRANSLATE GIVEN ENTRY
 
