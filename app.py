@@ -10,6 +10,8 @@ from schemas import CollectionSchema, EntrySchema
 
 from marshmallow import ValidationError
 
+import translation as translation
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -106,7 +108,7 @@ def update_collection(collection_id):
     collection_schema = CollectionSchema()
 
     try:
-        result = collection_schema.load(data, partial=True)
+        collection_schema.load(data, partial=True)
     except ValidationError as err:
         return jsonify(err.messages)
 
@@ -116,7 +118,9 @@ def update_collection(collection_id):
 
     db.session.commit()
 
-    return jsonify({"message": "Collection updated"})
+    result = collection_schema.dump(curr_coll)
+
+    return jsonify({"Collection updated": result})
 
 
 # DELETE Collection
@@ -160,7 +164,62 @@ def get_entries_from_collection(collection_id):
 
     return jsonify({curr_coll.name: result})
 
+# GET SINGLE ENTRY
+@app.get("/api/collections/<int:collection_id>/entries/<int:entry_id>")
+def get_single_entry(collection_id, entry_id):
+    """Returns single entry from given collection
 
-# TRANSLATE GIVEN ENTRY
+    Returns: {id: ..., title: ..., ...}
+    """
+
+    curr_entry = Entry.query.get_or_404(entry_id)
+    entry_schema = EntrySchema()
+
+    result = entry_schema.dump(curr_entry)
+
+    return jsonify(result)
+
+# EDIT SINGLE ENTRY
+@app.post("/api/collections/<int:collection_id>/entries/<int:entry_id>")
+def edit_single_entry(collection_id, entry_id):
+    """Edits single entry from given collection
+
+    Returns: {Entry updated}
+    """
+
+    data = request.get_json()
+    curr_entry = Entry.query.get_or_404(entry_id)
+    entry_schema = EntrySchema()
+
+    try:
+        entry_schema.load(data, partial=True)
+    except ValidationError as err:
+        return jsonify(err.messages)
+
+    for field, value in data.items():
+        if hasattr(curr_entry, field):
+            setattr(curr_entry, field, value)
+
+    db.session.commit()
+
+    result = entry_schema.dump(curr_entry)
+
+    return jsonify({"Updated entry": result})
+
+# TRANSLATE GIVEN ENTRY (ARGOS TRANSLATE)
+@app.post("/api/collections/<int:collection_id>/entries/<int:entry_id>/translate")
+def translate_single_entry(collection_id, entry_id):
+    """Translates single entry and updates its db instance"""
+
+    curr_entry = Entry.query.get_or_404(entry_id)
+    entry_schema = EntrySchema()
+
+    translation.translate_given_entry(curr_entry)
+
+    result = entry_schema.dump(curr_entry)
+
+    return jsonify({"Translated": result})
+
+
 
 # GET AI SUMMARY OF GIVEN ENTRY
