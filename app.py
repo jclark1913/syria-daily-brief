@@ -20,7 +20,7 @@ ma = Marshmallow(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = False
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
-app.config['JSON_SORT_KEYS'] = False
+app.config["JSON_SORT_KEYS"] = False
 app.json.sort_keys = False
 
 connect_db(app)
@@ -28,7 +28,6 @@ connect_db(app)
 ############# COLLECTIONS
 
 
-# GET ALL COLLECTIONS
 @app.get("/api/collections")
 def list_collections():
     """API route that returns all collections for a given user.
@@ -56,7 +55,8 @@ def create_new_collection():
     ]
 
     """
-    # Get JSOn and load schema
+
+    # Get JSON and load schema
     data = request.get_json()
     collection_schema = CollectionSchema()
 
@@ -81,13 +81,11 @@ def create_new_collection():
     return jsonify({"created": result})
 
 
-# GET SINGLE COLLECTION
 @app.get("/api/collections/<int:collection_id>")
 def get_collection(collection_id):
     """Returns a single collection as JSON.
 
     Returns: {id: 1, name: ..., ...}
-
     """
 
     collection = Collection.query.get_or_404(collection_id)
@@ -97,7 +95,6 @@ def get_collection(collection_id):
     return jsonify(result)
 
 
-# UPDATE COLLECTION DETAILS
 @app.post("/api/collections/<int:collection_id>")
 def update_collection(collection_id):
     """Updates a given collection:
@@ -125,7 +122,6 @@ def update_collection(collection_id):
     return jsonify({"Collection updated": result})
 
 
-# DELETE Collection
 # TODO: Handle migration of entries when collection is deleted
 @app.delete("/api/collections/<int:collection_id>")
 def delete_collection(collection_id):
@@ -142,7 +138,6 @@ def delete_collection(collection_id):
     return jsonify({"message": "Deleted collection"})
 
 
-# GET ALL ENTRIES FOR GIVEN COLLECTION
 @app.get("/api/collections/<int:collection_id>/entries")
 def get_entries_from_collection(collection_id):
     """Returns all entries from a given collection
@@ -158,15 +153,50 @@ def get_entries_from_collection(collection_id):
 
     return jsonify({curr_coll.name: result})
 
-# Translate entire collection
 
+# Translate multiple entries
+# NOTE: This route may change. It is currently attached to a collection, but it
+# doesn't access the collection_id at all nor is it dependent on anything save
+# the PK of an entry. That being said, the user won't ever be translating
+# multiple entries from more than one collection at a time.
+@app.post("/api/collections/<int:collection_id>/entries/translate")
+def translate_collection(collection_id):
+    """Translates multiple entries from a collection using Argos translate and
+    updates them in the db.
 
+    Accepts: {"entry_ids": [1, 34, 34]}
 
+    Returns: {"Translated":
+                [{id: 1 ...}, ...]}
+    """
 
+    # Gets JSON from request
+    data = request.get_json()
+
+    # Gets list of entry ids
+    entry_ids = data["entry_ids"]
+    entry_schema = EntrySchema(many=True)
+
+    # Filters for entry ids with query
+    entries = Entry.query.filter(Entry.id.in_(entry_ids))
+
+    # Translate all entries in list if list contains values
+    if entries:
+        translation.initialize_argostranslate()
+
+        for e in entries:
+            translation.translate_given_entry(e)
+
+        db.session.commit()
+
+    results = entry_schema.dump(entries)
+
+    return jsonify({"Translated": results})
 
 
 ############# ENTRIES
-# GET SINGLE ENTRY
+
+
 @app.get("/api/collections/<int:collection_id>/entries/<int:entry_id>")
 def get_single_entry(collection_id, entry_id):
     """Returns single entry from given collection
@@ -181,7 +211,7 @@ def get_single_entry(collection_id, entry_id):
 
     return jsonify(result)
 
-# EDIT SINGLE ENTRY
+
 @app.post("/api/collections/<int:collection_id>/entries/<int:entry_id>")
 def edit_single_entry(collection_id, entry_id):
     """Edits single entry from given collection
@@ -208,7 +238,7 @@ def edit_single_entry(collection_id, entry_id):
 
     return jsonify({"Updated entry": result})
 
-# TRANSLATE GIVEN ENTRY (ARGOS TRANSLATE)
+
 @app.post("/api/collections/<int:collection_id>/entries/<int:entry_id>/translate")
 def translate_single_entry(collection_id, entry_id):
     """Translates single entry and updates its db instance"""
@@ -216,14 +246,15 @@ def translate_single_entry(collection_id, entry_id):
     curr_entry = Entry.query.get_or_404(entry_id)
     entry_schema = EntrySchema()
 
+    # Initialize Argos Translation
     translation.initialize_argostranslate()
 
+    # Translate entry
     translation.translate_given_entry(curr_entry)
 
     result = entry_schema.dump(curr_entry)
 
     return jsonify({"Translated": result})
-
 
 
 # GET AI SUMMARY OF GIVEN ENTRY
