@@ -16,6 +16,19 @@ class CollectionSchema(ma.Schema):
 
 
 class EntrySchema(ma.Schema):
+
+    id = fields.Integer(dump_only=True)
+    collection_id = fields.Integer(dump_only=True)
+    title = fields.String(required=True)
+    title_translated = fields.String()
+    publication = fields.String()
+    full_text = fields.String()
+    full_text_translated = fields.String()
+    link = fields.String()
+    date_posted = fields.String() #Update to date?
+    ai_summary = fields.String()
+
+
     class Meta:
         fields = (
             "id",
