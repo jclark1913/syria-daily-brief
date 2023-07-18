@@ -1,6 +1,8 @@
 import argostranslate.package
 import argostranslate.translate
 
+from models import db
+
 from_code = "ar"
 to_code = "en"
 
@@ -41,6 +43,8 @@ def translate_given_entry(entry):
 
     entry.title_translated = en_title
     entry.full_text_translated = en_full_text
+
+    db.session.commit()
 
     return
 
