@@ -193,6 +193,7 @@ def translate_collection(collection_id):
 
     return jsonify({"Translated": results})
 
+# SUMMARIZE
 
 ############# ENTRIES
 
