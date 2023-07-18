@@ -20,6 +20,8 @@ ma = Marshmallow(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = False
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+app.config['JSON_SORT_KEYS'] = False
+app.json.sort_keys = False
 
 connect_db(app)
 
@@ -140,14 +142,6 @@ def delete_collection(collection_id):
     return jsonify({"message": "Deleted collection"})
 
 
-# DELETE COLLECTION
-# Migrate entries in collection to another collection
-
-# COPY FROM COLLECTION TO COLLECTION
-
-
-############# ENTRIES
-
 # GET ALL ENTRIES FOR GIVEN COLLECTION
 @app.get("/api/collections/<int:collection_id>/entries")
 def get_entries_from_collection(collection_id):
@@ -164,6 +158,14 @@ def get_entries_from_collection(collection_id):
 
     return jsonify({curr_coll.name: result})
 
+# Translate entire collection
+
+
+
+
+
+
+############# ENTRIES
 # GET SINGLE ENTRY
 @app.get("/api/collections/<int:collection_id>/entries/<int:entry_id>")
 def get_single_entry(collection_id, entry_id):
@@ -213,6 +215,8 @@ def translate_single_entry(collection_id, entry_id):
 
     curr_entry = Entry.query.get_or_404(entry_id)
     entry_schema = EntrySchema()
+
+    translation.initialize_argostranslate()
 
     translation.translate_given_entry(curr_entry)
 
