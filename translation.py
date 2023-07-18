@@ -36,8 +36,6 @@ def translate_given_entry(entry):
     ar_title = entry.title
     ar_full_text = entry.full_text
 
-    initialize_argostranslate()
-
     en_title = translate_ar_to_en(ar_title)
     en_full_text = translate_ar_to_en(ar_full_text)
 
