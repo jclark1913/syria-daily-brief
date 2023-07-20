@@ -1,11 +1,13 @@
 import requests
 
+from abc import ABC, abstractmethod
+
 from bs4 import BeautifulSoup
 
 from utils import DEFAULT_HEADERS
 
 
-class Base_Scraper:
+class Base_Scraper(ABC):
     """This is the default class for each web scraper. It contains base functionality
     used regularly by each scraper and allows for logic to be centralized and
     easily changed.
@@ -20,6 +22,7 @@ class Base_Scraper:
 
         return scraped_articles
 
+    @abstractmethod
     def get_news_articles_by_page(self):
         """Placeholder method overidden in subclasses where articles are gathered
         through pagination.
