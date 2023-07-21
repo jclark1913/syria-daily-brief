@@ -48,18 +48,6 @@ class Collection(db.Model):
         "Entry", backref="collection", cascade="all, delete-orphan"
     )
 
-    def serialize(self):
-        """Creates dictionary from db object.
-
-        Returns: {id: 1, name: ..., ...}
-        """
-        return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description,
-            "created_at": self.created_at,
-        }
-
 
 class Entry(db.Model):
     """A single data point scraped from a website. Linked to a collection."""
@@ -113,20 +101,3 @@ class Entry(db.Model):
     ai_summary = db.Column(
         db.Text,
     )
-
-    def serialize(self):
-        """Converts given entry to dictionary.
-
-        Returns: {id: 1, collection_id: 1, title: ..., ...}"""
-
-        return {
-            "id": self.id,
-            "collection_id": self.collection_id,
-            "title": self.title,
-            "title_translated": self.title_translated,
-            "full_text": self.full_text,
-            "full_text_translated": self.full_text_translated,
-            "link": self.link,
-            "date_posted": self.date_posted,
-            "ai_summary": self.ai_summary,
-        }
