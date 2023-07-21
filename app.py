@@ -11,6 +11,7 @@ from schemas import CollectionSchema, EntrySchema
 from marshmallow import ValidationError
 
 import translation as translation
+#TODO: Consider Blueprints for API routes in Flask
 
 load_dotenv()
 
@@ -146,6 +147,7 @@ def get_entries_from_collection(collection_id):
     """
 
     curr_coll = Collection.query.get_or_404(collection_id)
+    # TODO: use db relationship instead
     entries = Entry.query.filter_by(collection_id=collection_id)
     entry_schema = EntrySchema(many=True)
 
@@ -197,14 +199,14 @@ def translate_collection(collection_id):
 
 ############# ENTRIES
 
-
+# TODO: Consider removing collections from route
 @app.get("/api/collections/<int:collection_id>/entries/<int:entry_id>")
 def get_single_entry(collection_id, entry_id):
     """Returns single entry from given collection
 
     Returns: {id: ..., title: ..., ...}
     """
-
+    # TODO: Consider querying for collection first, then going down to entry
     curr_entry = Entry.query.get_or_404(entry_id)
     entry_schema = EntrySchema()
 
@@ -239,7 +241,7 @@ def edit_single_entry(collection_id, entry_id):
 
     return jsonify({"Updated entry": result})
 
-
+# TODO: Consider making this /translate and passing in collection_id and entry_id thru JSON
 @app.post("/api/collections/<int:collection_id>/entries/<int:entry_id>/translate")
 def translate_single_entry(collection_id, entry_id):
     """Translates single entry and updates its db instance"""
