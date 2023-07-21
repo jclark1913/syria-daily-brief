@@ -35,8 +35,14 @@ class Base_Scraper(ABC):
         TODO: Add logic to handle server timeouts here.
         """
 
-        # bs4 setup
-        response = requests.get(url, headers=DEFAULT_HEADERS)
+        # bs4 setup: Attempts get request from server and prints error message
+        # if any error occurs.
+
+        try:
+            response = requests.get(url, headers=DEFAULT_HEADERS, timeout=10)
+        except requests.exceptions.RequestException:
+            print("There was a connection error.")
+
         soup = BeautifulSoup(response.content, "html.parser")
 
         return soup
