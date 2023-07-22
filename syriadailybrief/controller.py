@@ -1,3 +1,6 @@
+import os
+print(os.getcwd())
+
 from scrapers import (
     dez24,
     enabbaladi,
