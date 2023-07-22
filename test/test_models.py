@@ -1,10 +1,10 @@
 import os
 from unittest import TestCase
-from models import db, Collection, Entry
+from syriadailybrief.models import db, Collection, Entry
 
 os.environ["DATABASE_URL"] = "postgresql:///sdb_test"
 
-from app import app
+from syriadailybrief.app import app
 
 db.drop_all()
 db.create_all()

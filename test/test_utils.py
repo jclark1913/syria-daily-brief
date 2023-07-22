@@ -1,5 +1,5 @@
 from unittest import TestCase, mock
-from scrapers.utils import (
+from syriadailybrief.scrapers.utils import (
     get_generic_timestamp,
     get_timestamp_from_arabic_latin_date,
     get_approx_timestamp_from_last_updated_AR,
@@ -65,9 +65,13 @@ class UtilsTestCase(TestCase):
         last_updated_AR3 = "6 أشهر ago"
         total_seconds3 = get_total_seconds_from_last_updated_AR(last_updated_AR3)
 
+        last_updated_AR4 = "‏يومين مضت"
+        total_seconds4 = get_total_seconds_from_last_updated_AR(last_updated_AR4)
+
         self.assertTrue(total_seconds1 == 1800)
         self.assertTrue(total_seconds2 == 63113852)
         self.assertTrue(total_seconds3 == 15778458)
+        self.assertTrue(total_seconds4 == 172800)
 
     def test_get_approx_timestamp_from_last_updated_AR(self):
         """Does get_approx_timestamp_from_last_updated_AR return an accurate timestamp?"""

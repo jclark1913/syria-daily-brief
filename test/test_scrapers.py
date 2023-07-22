@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 
 # import every file from scrapers directory
 
-from scrapers import base_scraper, dez24
+from syriadailybrief.scrapers import base_scraper, dez24
 
 
 class BaseScraperTestCase(TestCase):
