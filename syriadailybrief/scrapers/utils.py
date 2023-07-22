@@ -112,7 +112,7 @@ def get_total_seconds_from_last_updated_AR(last_updated):
     arabic_posted = [
         remove_RLM_char_from_str(word)
         for word in last_updated.split()
-        if word != "ago" and word != "منذ"
+        if word != "ago" and word != "منذ" and word != "مضت"
     ]
 
     # The word for "one" in Arabic (minus gender ending)

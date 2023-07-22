@@ -1,6 +1,7 @@
 import datetime
 
-from base_scraper import Base_Scraper
+from syriadailybrief.scrapers.base_scraper import Base_Scraper
+# import syriadailybrief.scrapers.utils as utils
 
 
 class SyriaDirect(Base_Scraper):

@@ -1,9 +1,9 @@
-from base_scraper import Base_Scraper
+from syriadailybrief.scrapers.base_scraper import Base_Scraper
+import syriadailybrief.scrapers.utils as utils
 
 import time
 import datetime
 
-import utils as utils
 
 
 class EnabBaladi(Base_Scraper):

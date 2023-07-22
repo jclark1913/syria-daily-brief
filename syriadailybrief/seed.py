@@ -1,5 +1,5 @@
-from models import Collection, Entry
-from app import db
+from syriadailybrief.models import Collection, Entry
+from syriadailybrief.app import db
 
 db.drop_all()
 db.create_all()

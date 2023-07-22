@@ -4,13 +4,13 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_marshmallow import Marshmallow
 
-from models import db, connect_db, Collection, Entry
+from syriadailybrief.models import db, connect_db, Collection, Entry
 
-from schemas import CollectionSchema, EntrySchema
+from syriadailybrief.schemas import CollectionSchema, EntrySchema
 
 from marshmallow import ValidationError
 
-import translation as translation
+import syriadailybrief.translation as translation
 #TODO: Consider Blueprints for API routes in Flask
 
 load_dotenv()
