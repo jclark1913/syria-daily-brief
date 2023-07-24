@@ -92,7 +92,7 @@ class Suwayda24(Base_Scraper):
 
         return article_text
 
-    def get_s24_eng_timestamp(last_updated):
+    def get_s24_eng_timestamp(self, last_updated):
         """Returns a unix timestamp for mm/dd/Y timestamps"""
 
         return time.mktime(
