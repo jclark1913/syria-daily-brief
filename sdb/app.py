@@ -65,7 +65,7 @@ def create_new_collection():
     try:
         result = collection_schema.load(data)
     except ValidationError as err:
-        return jsonify(err.messages)
+        return jsonify(errors=err.messages), 400
 
     # Get data for new db instance
     name = data["name"]
