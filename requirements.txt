@@ -14,6 +14,7 @@ charset-normalizer==3.1.0
 click==8.1.4
 cloudscraper==1.2.71
 cmake==3.26.4
+coverage==7.2.7
 ctranslate2==2.24.0
 decorator==5.1.1
 exceptiongroup==1.1.1
