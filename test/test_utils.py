@@ -92,6 +92,10 @@ class UtilsTestCase(TestCase):
             last_updated_AR3 = "6 أشهر ago"
             timestamp3 = get_approx_timestamp_from_last_updated_AR(last_updated_AR3)
 
+            self.assertTrue(type(timestamp1), int)
+            self.assertTrue(type(timestamp2), int)
+            self.assertTrue(type(timestamp3), int)
+
             self.assertTrue(timestamp1 == 1577853000)
             self.assertTrue(timestamp2 == (1577854800 - 63113852))
             self.assertTrue(timestamp3 == (1577854800 - 15778458))
