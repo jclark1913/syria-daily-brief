@@ -1,3 +1,13 @@
+import sys
+
+import os
+
+# Get the parent directory path (one level up from the current directory)
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+# Add the parent directory to sys.path
+sys.path.append(parent_dir)
+
 from sdb.models import Collection, Entry
 from sdb.app import db
 
