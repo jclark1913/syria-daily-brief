@@ -1,4 +1,5 @@
 from sdb.scrapers.base_scraper import Base_Scraper
+
 # import syriadailybrief.scrapers.utils as utils
 
 import time
@@ -29,7 +30,7 @@ class SANA(Base_Scraper):
         for a in articles:
             # identifies date posted and generates Unix timestamp
             date_posted = a.find("span", class_="tie-date").text
-            current_timestamp = self.get_timestamp(date_posted)
+            current_timestamp = self.get_timestamp_SANA(date_posted)
 
             # Breaks loop if timestamp reached
             if self.reached_time_limit_loop(
@@ -80,7 +81,7 @@ class SANA(Base_Scraper):
         paragraphs = soup.find("div", class_="entry").find_all("p", recursive=False)
         return "\n\n".join(paragraph.text for paragraph in paragraphs)
 
-    def get_timestamp(self, date):
+    def get_timestamp_SANA(self, date):
         """Takes date input and converts it to Unix timestamp
 
         NOTE: Assumes date is in YYYY-mm-dd format.
