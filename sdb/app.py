@@ -62,10 +62,7 @@ def create_new_collection():
     collection_schema = CollectionSchema()
 
     # Attempt to validate JSON data
-    try:
-        result = collection_schema.load(data)
-    except ValidationError as err:
-        return jsonify(errors=err.messages), 400
+    result = collection_schema.load(data)
 
     # Get data for new db instance
     name = data["name"]
@@ -107,10 +104,8 @@ def update_collection(collection_id):
     curr_coll = Collection.query.get_or_404(collection_id)
     collection_schema = CollectionSchema()
 
-    try:
-        collection_schema.load(data, partial=True)
-    except ValidationError as err:
-        return jsonify(err.messages)
+
+    collection_schema.load(data, partial=True)
 
     for field, value in data.items():
         if hasattr(curr_coll, field):
@@ -259,3 +254,16 @@ def translate_collection():
 #     result = entry_schema.dump(curr_entry)
 
 #     return jsonify({"Translated": result})
+
+
+@app.errorhandler(404)
+def not_found(e):
+    """404 Not Found page."""
+
+    return jsonify(error=404, text=str(e)), 404
+
+@app.errorhandler(ValidationError)
+def handle_marshmallow_validation(err):
+    """Error handler for Marshmallow validation errors"""
+
+    return jsonify(errors=err.messages), 400
