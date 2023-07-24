@@ -29,7 +29,9 @@ class HouranFL(Base_Scraper):
         for a in articles:
             # identifies date posted and generates Unix timestamp
             date_posted = a.find("span", class_="date meta-item tie-icon").text
-            current_timestamp = self.get_timestamp_from_arabic_latin_date(date_posted)
+            current_timestamp = self.get_timestamp_from_arabic_latin_date_HFL(
+                date_posted
+            )
             link = a.find("a", class_=None).get("href")
 
             # Breaks loop if timestamp reached
@@ -80,7 +82,7 @@ class HouranFL(Base_Scraper):
         )
         return "\n\n".join(paragraph.text for paragraph in paragraphs)
 
-    def get_timestamp_from_arabic_latin_date(self, date):
+    def get_timestamp_from_arabic_latin_date_HFL(self, date):
         """Converts Arabic date in 'dd, m, YYYY' format to unix timestamp"""
 
         # Get number of Arabic month and replace it in string
