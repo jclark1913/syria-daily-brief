@@ -1,5 +1,5 @@
 from unittest import TestCase, mock
-from syriadailybrief.scrapers.utils import (
+from sdb.scrapers.utils import (
     get_generic_timestamp,
     get_timestamp_from_arabic_latin_date,
     get_approx_timestamp_from_last_updated_AR,
