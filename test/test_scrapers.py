@@ -24,6 +24,49 @@ class BaseScraperTestCase(TestCase):
         with self.assertRaises(TypeError):
             base_scraper.Base_Scraper()
 
+    def test_reached_time_limit_loop(self):
+        """Does reached_time_limit_loop return correct boolean?"""
+
+        test_scraper = dez24.DEZ24()
+
+        """Should return True if current_timestamp is less than stop_timestamp"""
+        self.assertTrue(
+            test_scraper.reached_time_limit_loop(
+                stop_timestamp=1000, current_timestamp=1
+            )
+        )
+
+        """Should return False if current_timestamp is less than stop_timestamp"""
+        self.assertFalse(
+            test_scraper.reached_time_limit_loop(
+                stop_timestamp=1, current_timestamp=1000
+            )
+        )
+
+        """Should return False if stop_timestamp is not passed into method"""
+        self.assertFalse(test_scraper.reached_time_limit_loop(current_timestamp=1000))
+
+    def test_reached_time_limit_recurse(self):
+        """Does reached_time_limit_recurse return correct boolean?"""
+
+        test_scraper = dez24.DEZ24()
+
+        """Should return True if current_timestamp is greater than stop_timestamp"""
+        self.assertTrue(
+            test_scraper.reached_time_limit_recurse(
+                stop_timestamp=1, current_timestamp=1000
+            )
+        )
+
+        """Should return True if current_timestamp is equal to stop_timestamp"""
+        self.assertTrue(test_scraper.reached_time_limit_recurse(1, 1))
+
+        """Should return false if current_timestamp is less than stop_timestamp"""
+        self.assertFalse(test_scraper.reached_time_limit_recurse(1000, 1))
+
+        """Shoulre return False if stop_timestamp is not passed into method"""
+        self.assertFalse(test_scraper.reached_time_limit_recurse(current_timestamp=1000))
+
 
 class DEZ24TestCase(TestCase):
     """Test for dez24.py"""
@@ -163,8 +206,6 @@ class HouranFLTestCase(TestCase):
         timestamp = self.houranfl.get_timestamp_from_arabic_latin_date_HFL(
             "23 يوليو، 2023"
         )
-
-        print(timestamp)
 
         self.assertTrue(type(timestamp), int)
         self.assertTrue(timestamp == 1690084800)
