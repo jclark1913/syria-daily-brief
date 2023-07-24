@@ -5,7 +5,6 @@ import time
 import datetime
 
 
-
 class EnabBaladi(Base_Scraper):
     def __init__(self):
         self.url_template = (
@@ -43,7 +42,7 @@ class EnabBaladi(Base_Scraper):
             # The top featured articles do not have a timestamp on the main page, so
             # we assume that the top 5-6 featured articles are from today.
             if content.find("samp"):
-                current_timestamp = self.get_timestamp_from_arabic_latin_date(
+                current_timestamp = utils.get_timestamp_from_arabic_latin_date(
                     content.find("samp").text
                 )
                 date_posted = current_timestamp
@@ -101,16 +100,3 @@ class EnabBaladi(Base_Scraper):
             "p", recursive=False
         )
         return "\n\n".join(paragraph.text for paragraph in paragraphs)
-
-    def get_timestamp_from_arabic_latin_date(self, date):
-        """Converts Arabic date in 'YYYY, dd month' format to unix timestamp"""
-
-        # Get number of Arabic month and replace it in string
-        for month in utils.ARABIC_LATIN_MONTHS:
-            if month in date:
-                translated_date = date.replace(month, utils.ARABIC_LATIN_MONTHS[month])
-
-        # Get unix timestamp from translated date
-        return time.mktime(
-            datetime.datetime.strptime(translated_date, "%m %d, %Y").timetuple()
-        )
