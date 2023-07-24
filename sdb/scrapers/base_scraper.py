@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from bs4 import BeautifulSoup
 
-from syriadailybrief.scrapers.utils import DEFAULT_HEADERS
+from sdb.scrapers.utils import DEFAULT_HEADERS
 
 
 class Base_Scraper(ABC):

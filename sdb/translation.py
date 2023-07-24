@@ -1,7 +1,7 @@
 import argostranslate.package
 import argostranslate.translate
 
-from syriadailybrief.models import db
+from sdb.models import db
 
 from_code = "ar"
 to_code = "en"

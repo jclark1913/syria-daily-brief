@@ -1,5 +1,5 @@
-from syriadailybrief.scrapers.base_scraper import Base_Scraper
-import syriadailybrief.scrapers.utils as utils
+from sdb.scrapers.base_scraper import Base_Scraper
+import sdb.scrapers.utils as utils
 
 
 class DEZ24(Base_Scraper):

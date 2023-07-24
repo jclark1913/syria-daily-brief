@@ -4,13 +4,13 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_marshmallow import Marshmallow
 
-from syriadailybrief.models import db, connect_db, Collection, Entry
+from sdb.models import db, connect_db, Collection, Entry
 
-from syriadailybrief.schemas import CollectionSchema, EntrySchema
+from sdb.schemas import CollectionSchema, EntrySchema
 
 from marshmallow import ValidationError
 
-import syriadailybrief.translation as translation
+import sdb.translation as translation
 #TODO: Consider Blueprints for API routes in Flask
 
 load_dotenv()
@@ -156,7 +156,7 @@ def get_entries_from_collection(collection_id):
     return jsonify({curr_coll.name: result})
 
 
-# SUMMARIZE
+# PRINT COLLECTION TO EXCEL DATABASE
 
 ############# ENTRIES
 
@@ -238,7 +238,7 @@ def translate_collection():
     return jsonify({"Translated": results})
 
 
-# GET AI SUMMARY OF GIVEN ENTRY
+# GET AI SUMMARY OF ENTRIES
 
 
 

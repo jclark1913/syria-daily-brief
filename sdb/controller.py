@@ -1,7 +1,7 @@
 import os
 print(os.getcwd())
 
-from syriadailybrief.scrapers import (
+from sdb.scrapers import (
     dez24,
     enabbaladi,
     houranfl,
@@ -10,7 +10,7 @@ from syriadailybrief.scrapers import (
     syriadirect,
 )
 
-from syriadailybrief.models import db, Entry
+from sdb.models import db, Entry
 
 from enum import Enum
 

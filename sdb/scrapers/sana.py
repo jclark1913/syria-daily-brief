@@ -1,4 +1,4 @@
-from syriadailybrief.scrapers.base_scraper import Base_Scraper
+from sdb.scrapers.base_scraper import Base_Scraper
 # import syriadailybrief.scrapers.utils as utils
 
 import time
