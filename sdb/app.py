@@ -235,7 +235,9 @@ def translate_entries():
         translation.initialize_argostranslate()
 
         for e in entries:
-            translation.translate_given_entry(e)
+            [en_title, en_full_text] = translation.get_translated_entry_title_and_text(e)
+            e.title_translated = en_title
+            e.full_text_translated = en_full_text
 
         db.session.commit()
 
