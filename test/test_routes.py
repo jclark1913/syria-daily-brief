@@ -16,8 +16,6 @@ class APICollectionsRoutesTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data"""
 
-        print(os.environ["DATABASE_URL"])
-
         Collection.query.delete()
         Entry.query.delete()
 
@@ -66,6 +64,7 @@ class APICollectionsRoutesTestCase(TestCase):
 
         response = self.client.post("/api/collections", json=input)
         data = response.json
+        new_collection = Collection.query.filter_by(name="New Collection").first()
 
         """Should return 200 status code"""
         self.assertEqual(response.status_code, 200)
@@ -74,9 +73,10 @@ class APICollectionsRoutesTestCase(TestCase):
         self.assertEqual(data["created"]["name"], "New Collection")
         self.assertEqual(data["created"]["description"], "New Description")
 
+
         """Should add new collection to db"""
         self.assertEqual(Collection.query.count(), 2)
-        self.assertEqual(Collection.query.get(2).name, "New Collection")
+        self.assertTrue(new_collection.name == "New Collection")
 
     def test_create_collection_invalid(self):
         """Does POST /api/collections w/ invalid data return error?"""
@@ -183,8 +183,6 @@ class APICollectionsRoutesTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         """Should return a list of entries w/ correct data"""
-        print(data)
-        print(data["Test Collection"])
         self.assertEqual(len(data), 1)
         self.assertEqual(data["Test Collection"][0]["title"], "Test Entry")
 
