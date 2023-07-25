@@ -273,7 +273,7 @@ class APIEntriesRoutesTestCase(TestCase):
         self.assertEqual(data["errors"]["wrong_title"][0], "Unknown field.")
 
     def test_delete_single_entry(self):
-        """Does DELETE /api/entries<int:entry_id> delete an entry?"""
+        """Does DELETE /api/entries/<int:entry_id> delete an entry?"""
 
         response = self.client.delete(f"/api/entries/{self.entry_id}")
         data = response.json
@@ -283,3 +283,109 @@ class APIEntriesRoutesTestCase(TestCase):
 
         """Should delete entry from db"""
         self.assertEqual(Entry.query.count(), 0)
+
+        """Should return success message"""
+        self.assertEqual(data["Deleted entry"], self.entry_id)
+
+    def test_delete_single_entry_invalid(self):
+        """Does DELETE /api/entries/<int:entry_id> w/ invalid id return error?"""
+
+        response = self.client.delete(f"/api/entries/1000")
+
+        """Should return 404 status code"""
+        self.assertEqual(response.status_code, 404)
+
+
+class APITranslateRoutesTestCase(TestCase):
+    """Tests for /api/translate"""
+
+    def setUp(self):
+        """Create test client, add sample data"""
+
+        print(os.environ["DATABASE_URL"])
+
+        Collection.query.delete()
+        Entry.query.delete()
+
+        self.client = app.test_client()
+
+        self.collection = Collection(
+            name="Test Collection", description="Test Description"
+        )
+
+        db.session.add(self.collection)
+        db.session.commit()
+
+        self.collection_id = self.collection.id
+
+        self.entry1 = Entry(
+            title="عنوان المقالة الاولى",
+            collection_id=self.collection.id,
+            publication="Test Publication",
+            full_text="هذا النص الكامل للمقالة الأولى في اللغة العربية",
+        )
+
+        self.entry2 = Entry(
+            title="عنوان المقالة الثانية",
+            collection_id=self.collection.id,
+            publication="Test Publication",
+            full_text="هذا النص الكامل للمقالة الثانية في اللغة العربية",
+        )
+
+        db.session.add(self.entry1)
+        db.session.add(self.entry2)
+        db.session.commit()
+
+        self.entry1_id = self.entry1.id
+        self.entry2_id = self.entry2.id
+
+    def tearDown(self):
+        pass
+
+    # NOTE: In the future maybe consider using mock.patch decorators for cleaner code.
+    def test_translate_entries(self):
+        """Does POST /api/translate translate multiple entries?"""
+
+        with mock.patch(
+            "argostranslate.translate.translate",
+            mock.Mock(return_value="English translation"),
+        ), mock.patch(
+            "sdb.translation.initialize_argostranslate", mock.Mock(return_value=None)
+        ):
+            response = self.client.post(
+                "/api/translate",
+                json={"entry_ids": [self.entry1_id, self.entry2_id]},
+            )
+            data = response.json
+
+            """Should return 200 status code"""
+            self.assertEqual(response.status_code, 200)
+
+            """Should return JSON of translated entries"""
+            self.assertEqual(len(data["Translated"]), 2)
+            self.assertEqual(
+                data["Translated"][0]["title_translated"], "English translation"
+            )
+            self.assertEqual(
+                data["Translated"][1]["full_text_translated"], "English translation"
+            )
+
+    def test_translate_entries_invalid(self):
+        """Does POST /api/translate w/ invalid data (nonexistant entry) return empty array?"""
+
+        with mock.patch(
+            "argostranslate.translate.translate",
+            mock.Mock(return_value="English translation"),
+        ), mock.patch(
+            "sdb.translation.initialize_argostranslate", mock.Mock(return_value=None)
+        ):
+
+            response = self.client.post("/api/translate", json={"entry_ids": [1000]})
+            data = response.json
+
+            """Should return 400 status code"""
+            self.assertEqual(response.status_code, 200)
+
+            """Should return empty array"""
+            self.assertEqual(data["Translated"], [])
+
