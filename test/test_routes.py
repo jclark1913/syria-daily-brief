@@ -347,8 +347,8 @@ class APITranslateRoutesTestCase(TestCase):
         """Does POST /api/translate translate multiple entries?"""
 
         with mock.patch(
-            "argostranslate.translate.translate",
-            mock.Mock(return_value="English translation"),
+            "sdb.translation.get_translated_entry_title_and_text",
+            mock.Mock(return_value=["English Title", "English Text"]),
         ), mock.patch(
             "sdb.translation.initialize_argostranslate", mock.Mock(return_value=None)
         ):
@@ -364,18 +364,18 @@ class APITranslateRoutesTestCase(TestCase):
             """Should return JSON of translated entries"""
             self.assertEqual(len(data["Translated"]), 2)
             self.assertEqual(
-                data["Translated"][0]["title_translated"], "English translation"
+                data["Translated"][0]["title_translated"], "English Title"
             )
             self.assertEqual(
-                data["Translated"][1]["full_text_translated"], "English translation"
+                data["Translated"][1]["full_text_translated"], "English Text"
             )
 
     def test_translate_entries_invalid(self):
         """Does POST /api/translate w/ invalid data (nonexistant entry) return empty array?"""
 
         with mock.patch(
-            "argostranslate.translate.translate",
-            mock.Mock(return_value="English translation"),
+            "sdb.translation.get_translated_entry_title_and_text",
+            mock.Mock(return_value=["English Title", "English Text"]),
         ), mock.patch(
             "sdb.translation.initialize_argostranslate", mock.Mock(return_value=None)
         ):
