@@ -1,8 +1,6 @@
 import argostranslate.package
 import argostranslate.translate
 
-from sdb.models import db
-
 from_code = "ar"
 to_code = "en"
 
@@ -30,7 +28,7 @@ def translate_ar_to_en(text):
     translated_text = argostranslate.translate.translate(text, from_code=from_code, to_code=to_code)
     return translated_text
 
-def translate_given_entry(entry):
+def get_translated_entry_title_and_text(entry):
     """Translates a given entry and updates it in the db"""
 
     ar_title = entry.title
@@ -39,12 +37,7 @@ def translate_given_entry(entry):
     en_title = translate_ar_to_en(ar_title)
     en_full_text = translate_ar_to_en(ar_full_text)
 
-    entry.title_translated = en_title
-    entry.full_text_translated = en_full_text
-
-    db.session.commit()
-
-    return
+    return [en_title, en_full_text]
 
 
 
