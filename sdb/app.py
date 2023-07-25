@@ -157,7 +157,7 @@ def get_entries_from_collection(collection_id):
 
 # TODO: Consider removing collections from route
 @app.get("/api/entries/<int:entry_id>")
-def get_single_entry(collection_id, entry_id):
+def get_single_entry(entry_id):
     """Returns single entry from given collection
 
     Returns: {id: ..., title: ..., ...}
@@ -172,7 +172,7 @@ def get_single_entry(collection_id, entry_id):
 
 
 @app.post("/api/entries/<int:entry_id>")
-def edit_single_entry(collection_id, entry_id):
+def edit_single_entry(entry_id):
     """Edits single entry from given collection
 
     Returns: {Entry updated}
@@ -182,10 +182,7 @@ def edit_single_entry(collection_id, entry_id):
     curr_entry = Entry.query.get_or_404(entry_id)
     entry_schema = EntrySchema()
 
-    try:
-        entry_schema.load(data, partial=True)
-    except ValidationError as err:
-        return jsonify(err.messages)
+    entry_schema.load(data, partial=True)
 
     for field, value in data.items():
         if hasattr(curr_entry, field):
