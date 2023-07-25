@@ -173,7 +173,7 @@ def get_single_entry(entry_id):
 
 @app.post("/api/entries/<int:entry_id>")
 def edit_single_entry(entry_id):
-    """Edits single entry from given collection
+    """Edits single entry
 
     Returns: {Entry updated}
     """
@@ -194,9 +194,23 @@ def edit_single_entry(entry_id):
 
     return jsonify({"Updated entry": result})
 
+@app.delete("/api/entries/<int:entry_id>")
+def delete_single_entry(entry_id):
+    """Deletes single entry
+
+    Returns: {Entry deleted}
+    """
+
+    curr_entry = Entry.query.get_or_404(entry_id)
+    db.session.delete(curr_entry)
+
+    db.session.commit()
+
+    return jsonify({"Deleted entry": entry_id})
+
 # Translate multiple entries
 @app.post("/api/translate")
-def translate_collection():
+def translate_entries():
     """Translates multiple entries from a collection using Argos translate and
     updates them in the db.
 
@@ -230,29 +244,13 @@ def translate_collection():
     return jsonify({"Translated": results})
 
 
+
+
 # GET AI SUMMARY OF ENTRIES
 
 
 
-# # TODO: Consider making this /translate and passing in collection_id and entry_id thru JSON
-# @app.post("/api/collections/<int:collection_id>/entries/<int:entry_id>/translate")
-# def translate_single_entry(collection_id, entry_id):
-#     """Translates single entry and updates its db instance"""
-
-#     curr_entry = Entry.query.get_or_404(entry_id)
-#     entry_schema = EntrySchema()
-
-#     # Initialize Argos Translation
-#     translation.initialize_argostranslate()
-
-#     # Translate entry
-#     translation.translate_given_entry(curr_entry)
-
-#     result = entry_schema.dump(curr_entry)
-
-#     return jsonify({"Translated": result})
-
-
+# Error handlers
 @app.errorhandler(404)
 def not_found(e):
     """404 Not Found page."""
