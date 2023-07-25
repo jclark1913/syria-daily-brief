@@ -28,6 +28,9 @@ class APICollectionsRoutesTestCase(TestCase):
         )
 
         db.session.add(self.collection)
+        db.session.commit()
+
+        self.collection_id = self.collection.id
 
         self.entry = Entry(
             title="Test Entry",
@@ -38,7 +41,6 @@ class APICollectionsRoutesTestCase(TestCase):
         db.session.add(self.entry)
         db.session.commit()
 
-        self.collection_id = self.collection.id
         self.entry_id = self.entry.id
 
     def tearDown(self):
@@ -214,3 +216,70 @@ class APIEntriesRoutesTestCase(TestCase):
 
         self.collection_id = self.collection.id
         self.entry_id = self.entry.id
+
+    def tearDown(self):
+        pass
+
+    def test_get_single_entry(self):
+        """Does GET /api/entries/<entry_id> return the correct entry?"""
+
+        response = self.client.get(f"/api/entries/{self.entry_id}")
+        data = response.json
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should return JSON of entry"""
+        self.assertEqual(data["title"], "Test Entry")
+        self.assertEqual(data["publication"], "Test Publication")
+
+    def test_get_single_entry_invalid(self):
+        """Does GET /api/entries/<entry_id> return a 404 if no entry found?"""
+
+        response = self.client.get("/api/entries/1000")
+
+        """Should return 404 status code"""
+        self.assertEqual(response.status_code, 404)
+
+    def test_edit_single_entry(self):
+        """Does POST /api/entries/<int:entry_id> update an entry?"""
+
+        response = self.client.post(
+            f"/api/entries/{self.entry_id}",
+            json={"title": "Updated Entry", "publication": "Updated Publication"},
+        )
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should update entry in db"""
+        self.assertEqual(Entry.query.count(), 1)
+        self.assertTrue(Entry.query.first().title == "Updated Entry")
+        self.assertTrue(Entry.query.first().publication == "Updated Publication")
+
+    def test_edit_single_entry_invalid(self):
+        """Does POST /api/entries/<int:entry_id> w/ invalid data return error?"""
+
+        response = self.client.post(
+            f"/api/entries/{self.entry_id}",
+            json={"wrong_title": "Updated Entry", "publication": "Updated Publication"},
+        )
+        data = response.json
+
+        """Should return 400 status code"""
+        self.assertEqual(response.status_code, 400)
+
+        """Should return error message"""
+        self.assertEqual(data["errors"]["wrong_title"][0], "Unknown field.")
+
+    def test_delete_single_entry(self):
+        """Does DELETE /api/entries<int:entry_id> delete an entry?"""
+
+        response = self.client.delete(f"/api/entries/{self.entry_id}")
+        data = response.json
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should delete entry from db"""
+        self.assertEqual(Entry.query.count(), 0)
