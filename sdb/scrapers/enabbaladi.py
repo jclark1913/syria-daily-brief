@@ -4,7 +4,6 @@ from sdb.scrapers.scraping_error import ScrapingError
 from sdb.scrapers.scrape_result import ScrapeResult
 
 import time
-import datetime
 
 
 class EnabBaladi(BaseScraper):
