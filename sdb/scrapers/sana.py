@@ -17,9 +17,11 @@ class SANA(BaseScraper):
         # Dataclass scrape result to be returned
         scrape_result = ScrapeResult()
 
+        url = self.url_template
+
         while True:
             # Generate correct url from template
-            url = self.url_template.format(page_num=page_num)
+            url = url.format(page_num=page_num)
 
             # This try/except block is used to catch any errors that occur during
             # scraping and return the article_list up to that point.
