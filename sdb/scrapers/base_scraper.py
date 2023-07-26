@@ -4,7 +4,9 @@ from abc import ABC, abstractmethod
 
 from bs4 import BeautifulSoup
 
-from sdb.scrapers.utils import DEFAULT_HEADERS, ScrapingError
+from sdb.scrapers.utils import DEFAULT_HEADERS
+
+from sdb.scrapers.scraping_error import ScrapingError
 
 
 class BaseScraper(ABC):
