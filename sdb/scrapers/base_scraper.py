@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from sdb.scrapers.utils import DEFAULT_HEADERS, ScrapingError
 
 
-class Base_Scraper(ABC):
+class BaseScraper(ABC):
     """This is the default class for each web scraper. It contains base functionality
     used regularly by each scraper and allows for logic to be centralized and
     easily changed.
