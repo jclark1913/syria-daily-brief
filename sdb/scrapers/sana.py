@@ -1,13 +1,12 @@
-from sdb.scrapers.base_scraper import Base_Scraper
+from sdb.scrapers.base_scraper import BaseScraper
 from sdb.scrapers.utils import ScrapingError
-
-# import syriadailybrief.scrapers.utils as utils
+from sdb.scrapers.scrape_result import ScrapeResult
 
 import time
 import datetime
 
 
-class SANA(Base_Scraper):
+class SANA(BaseScraper):
     def __init__(self):
         self.url_template = "https://sana.sy/?cat=29582&paged={page_num}"
         self.publication = "SANA (Syrian Arab News Network)"
@@ -16,7 +15,7 @@ class SANA(Base_Scraper):
         """Scrapes a single page of SANA articles until time limit reached"""
 
         # List of articles to be returned
-        article_list = []
+        scrape_result = ScrapeResult()
 
         while True:
             # Generate correct url from template
@@ -29,7 +28,9 @@ class SANA(Base_Scraper):
                 soup = self.get_soup(url=url)
             except ScrapingError as e:
                 print(f"Scraping error: {e}")
-                return article_list
+                scrape_result.success = False
+                scrape_result.error_message = str(e)
+                return scrape_result
 
             articles = soup.find_all("article", class_="item-list")
 
@@ -45,7 +46,7 @@ class SANA(Base_Scraper):
                 if self.reached_time_limit_loop(
                     stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
                 ):
-                    return article_list
+                    return scrape_result
 
                 # Gets title from card + creates dict of basic data
                 title = a.find("a", class_=None).text
@@ -65,14 +66,17 @@ class SANA(Base_Scraper):
                     article["full_text"] = self.get_article_text(article["link"])
                 except ScrapingError as e:
                     print("Scraping error: {e}")
-                    return article_list
-                article_list.append(article)
+                    scrape_result.success = False
+                    scrape_result.error_message = str(e)
+                    return scrape_result
+
+                scrape_result.article_list.append(article)
 
             # Recursively calls method for next page until stop_timestamp reached.
             if not self.should_continue_pagination(
                 stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
             ):
-                return article_list
+                return scrape_result
 
             # Go to next page
             page_num = page_num + 1
