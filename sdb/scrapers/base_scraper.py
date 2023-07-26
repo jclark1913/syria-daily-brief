@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from bs4 import BeautifulSoup
 
-from sdb.scrapers.utils import DEFAULT_HEADERS
+from sdb.scrapers.utils import DEFAULT_HEADERS, ScrapingError
 
 
 class Base_Scraper(ABC):
@@ -38,10 +38,14 @@ class Base_Scraper(ABC):
         # bs4 setup: Attempts get request from server and prints error message
         # if any error occurs.
 
+
+        # NOTE: This will raise a scraping error BUT it will retain the original
+        # exception in the __cause__ atribute of the ScrapingError object. The
+        # "from e" is a neat little trick to ease debugging a bit.
         try:
             response = requests.get(url, headers=DEFAULT_HEADERS, timeout=10)
-        except requests.exceptions.RequestException:
-            print("There was a connection error.")
+        except Exception as e:
+            raise ScrapingError(f"Failed to get response from {url}", url) from e
 
         soup = BeautifulSoup(response.content, "html.parser")
 
@@ -75,9 +79,11 @@ class Base_Scraper(ABC):
         return False
 
     @staticmethod
-    def reached_time_limit_recurse(stop_timestamp=False, current_timestamp=False):
+    def should_continue_pagination(stop_timestamp=False, current_timestamp=False):
         """Returns true if current timestamp hasn't reached limit, else returns
-        false. Used in logic determining whether to recurse"""
+        false. Used in logic determining whether to continue pagination while
+        scraping.
+        """
 
         if stop_timestamp and current_timestamp >= stop_timestamp:
             return True
