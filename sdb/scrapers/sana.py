@@ -1,5 +1,5 @@
 from sdb.scrapers.base_scraper import BaseScraper
-from sdb.scrapers.utils import ScrapingError
+from sdb.scrapers.scraping_error import ScrapingError
 from sdb.scrapers.scrape_result import ScrapeResult
 
 import time
@@ -14,7 +14,7 @@ class SANA(BaseScraper):
     def get_news_articles_by_page(self, page_num=1, stop_timestamp=False):
         """Scrapes a single page of SANA articles until time limit reached"""
 
-        # List of articles to be returned
+        # Dataclass scrape result to be returned
         scrape_result = ScrapeResult()
 
         while True:
@@ -72,7 +72,7 @@ class SANA(BaseScraper):
 
                 scrape_result.article_list.append(article)
 
-            # Recursively calls method for next page until stop_timestamp reached.
+            # Checks if stop timestamp reached.
             if not self.should_continue_pagination(
                 stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
             ):
