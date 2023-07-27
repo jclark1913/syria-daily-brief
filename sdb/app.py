@@ -11,7 +11,10 @@ from sdb.schemas import CollectionSchema, EntrySchema
 from marshmallow import ValidationError
 
 import sdb.translation as translation
-#TODO: Consider Blueprints for API routes in Flask
+
+import sdb.ai_utils as ai_utils
+
+# TODO: Consider Blueprints for API routes in Flask
 
 load_dotenv()
 
@@ -25,6 +28,7 @@ app.config["JSON_SORT_KEYS"] = False
 app.json.sort_keys = False
 
 connect_db(app)
+
 
 ############# COLLECTIONS
 
@@ -104,7 +108,6 @@ def update_collection(collection_id):
     curr_coll = Collection.query.get_or_404(collection_id)
     collection_schema = CollectionSchema()
 
-
     collection_schema.load(data, partial=True)
 
     for field, value in data.items():
@@ -155,6 +158,7 @@ def get_entries_from_collection(collection_id):
 
 ############# ENTRIES
 
+
 # TODO: Consider removing collections from route
 @app.get("/api/entries/<int:entry_id>")
 def get_single_entry(entry_id):
@@ -194,6 +198,7 @@ def edit_single_entry(entry_id):
 
     return jsonify({"Updated entry": result})
 
+
 @app.delete("/api/entries/<int:entry_id>")
 def delete_single_entry(entry_id):
     """Deletes single entry
@@ -207,6 +212,7 @@ def delete_single_entry(entry_id):
     db.session.commit()
 
     return jsonify({"Deleted entry": entry_id})
+
 
 # Translate multiple entries
 @app.post("/api/translate")
@@ -235,7 +241,9 @@ def translate_entries():
         translation.initialize_argostranslate()
 
         for e in entries:
-            [en_title, en_full_text] = translation.get_translated_entry_title_and_text(e)
+            [en_title, en_full_text] = translation.get_translated_entry_title_and_text(
+                e
+            )
             e.title_translated = en_title
             e.full_text_translated = en_full_text
 
@@ -246,9 +254,48 @@ def translate_entries():
     return jsonify({"Translated": results})
 
 
-
-
 # GET AI SUMMARY OF ENTRIES
+
+
+# Summarize multiple entries
+@app.post("/api/summarize")
+def summarize_entries():
+    """Uses the OpenAI API to summarize given entries and update them in the
+    database
+
+    Accepts: {"entry_ids": [1, 34, 34]}
+
+    Returns: {"Summarized":
+                [{id: 1 ...}, ...]}
+    """
+
+    # Load OpenAI API key (will return None if not found)
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    # Return error if no API key
+    if not openai_api_key:
+        return jsonify(error="No OpenAI API key found"), 400
+
+    # Gets JSON from request
+    data = request.get_json()
+
+    # Gets list of entry ids
+    entry_ids = data["entry_ids"]
+    entry_schema = EntrySchema(many=True)
+
+    # Filters for entry ids with query
+    entries = Entry.query.filter(Entry.id.in_(entry_ids))
+
+    # Summarize all entries in list if list contains values
+    if entries:
+        for e in entries:
+            e.ai_summary = ai_utils.get_ai_summary_for_arabic_text(e.full_text)
+
+    db.session.commit()
+
+    results = entry_schema.dump(entries)
+
+    return jsonify({"Summarized": results})
 
 
 
@@ -258,6 +305,7 @@ def not_found(e):
     """404 Not Found page."""
 
     return jsonify(error=404, text=str(e)), 404
+
 
 @app.errorhandler(ValidationError)
 def handle_marshmallow_validation(err):
