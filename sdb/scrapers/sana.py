@@ -17,11 +17,12 @@ class SANA(BaseScraper):
         # Dataclass scrape result to be returned
         scrape_result = ScrapeResult()
 
-        url = self.url_template
+        url_template = self.url_template
 
         while True:
+
             # Generate correct url from template
-            url = url.format(page_num=page_num)
+            url = url_template.format(page_num=page_num)
 
             # This try/except block is used to catch any errors that occur during
             # scraping and return the article_list up to that point.
@@ -73,6 +74,7 @@ class SANA(BaseScraper):
                     return scrape_result
 
                 scrape_result.article_list.append(article)
+
 
             # Checks if stop timestamp reached.
             if not self.should_continue_pagination(
