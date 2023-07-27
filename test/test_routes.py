@@ -1,5 +1,6 @@
 import os
 from unittest import TestCase, mock
+from unittest.mock import patch
 from sdb.models import db, Collection, Entry
 
 os.environ["DATABASE_URL"] = "postgresql:///sdb_test"
@@ -300,8 +301,6 @@ class APITranslateRoutesTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data"""
 
-        print(os.environ["DATABASE_URL"])
-
         Collection.query.delete()
         Entry.query.delete()
 
@@ -368,6 +367,13 @@ class APITranslateRoutesTestCase(TestCase):
                 data["Translated"][1]["full_text_translated"], "English Text"
             )
 
+            """Should update the database"""
+            self.assertEqual(Entry.query.count(), 2)
+            self.assertEqual(Entry.query.first().title_translated, "English Title")
+            self.assertEqual(Entry.query.first().full_text_translated, "English Text")
+            self.assertEqual(Entry.query.get(self.entry2_id).title_translated, "English Title")
+            self.assertEqual(Entry.query.get(self.entry2_id).full_text_translated, "English Text")
+
     def test_translate_entries_invalid(self):
         """Does POST /api/translate w/ invalid data (nonexistant entry) return empty array?"""
 
@@ -387,3 +393,109 @@ class APITranslateRoutesTestCase(TestCase):
             """Should return empty array"""
             self.assertEqual(data["Translated"], [])
 
+
+class APISummarizeRoutesTestCase(TestCase):
+    """Tests for /api/summarize"""
+
+    def setUp(self):
+        """Setup test client, add sample data"""
+
+        Collection.query.delete()
+        Entry.query.delete()
+
+        self.client = app.test_client()
+
+        self.collection = Collection(
+            name="Test Collection", description="Test Description"
+        )
+
+        db.session.add(self.collection)
+        db.session.commit()
+
+        self.collection_id = self.collection.id
+
+        self.entry1 = Entry(
+            title="عنوان المقالة الاولى",
+            collection_id=self.collection.id,
+            publication="Test Publication",
+            full_text="هذا النص الكامل للمقالة الأولى في اللغة العربية",
+        )
+
+        self.entry2 = Entry(
+            title="عنوان المقالة الثانية",
+            collection_id=self.collection.id,
+            publication="Test Publication",
+            full_text="هذا النص الكامل للمقالة الثانية في اللغة العربية",
+        )
+
+        db.session.add(self.entry1)
+        db.session.add(self.entry2)
+        db.session.commit()
+
+        self.entry1_id = self.entry1.id
+        self.entry2_id = self.entry2.id
+
+    def test_summarize_entries(self):
+        """Does POST /api/summarize return summarize multiple entries and update the database?"""
+
+        with mock.patch(
+            "sdb.ai_utils.get_ai_summary_for_arabic_text",
+            mock.Mock(return_value="Summarized Text")
+        ):
+            response = self.client.post(
+                "/api/summarize",
+                json={"entry_ids": [self.entry1_id, self.entry2_id]},
+            )
+
+            data = response.json
+
+            """Should return 200 status code"""
+            self.assertEqual(response.status_code, 200)
+
+            """Should return JSON of summarized entries"""
+            self.assertEqual(len(data["Summarized"]), 2)
+            self.assertEqual(data["Summarized"][0]["ai_summary"], "Summarized Text")
+            self.assertEqual(data["Summarized"][1]["ai_summary"], "Summarized Text")
+
+            """Should update the database"""
+            self.assertEqual(Entry.query.count(), 2)
+            self.assertEqual(Entry.query.first().ai_summary, "Summarized Text")
+            self.assertEqual(Entry.query.get(self.entry2_id).ai_summary, "Summarized Text")
+
+    """NOTE: This mocking approach is interesting. In order to get this working,
+    I did have to make sure that openai_api_key was defined in the route rather
+    than at the top of app.py. I don't think this is an issue, but I should do
+    some more research on this."""
+
+    @patch('os.getenv')
+    def test_summarize_entries_invalid(self, mock_getenv):
+        """Should return error if api key not found"""
+        def side_effect(arg):
+            if arg == "OPENAI_API_KEY":
+                return None
+            else:
+                return os.environ.get(arg)
+
+        mock_getenv.side_effect = side_effect
+
+        with mock.patch(
+            "sdb.ai_utils.get_ai_summary_for_arabic_text",
+            mock.Mock(return_value="Summarized Text")
+        ):
+            response = self.client.post(
+                "/api/summarize",
+                json={"entry_ids": [self.entry1_id, self.entry2_id]},
+            )
+
+            data = response.json
+
+            """Should return 400 status code"""
+            self.assertEqual(response.status_code, 400)
+
+            """Should return error message"""
+            self.assertEqual(data["error"], "No OpenAI API key found")
+
+            """Should not update the database"""
+            self.assertEqual(Entry.query.count(), 2)
+            self.assertEqual(Entry.query.first().ai_summary, None)
+            self.assertEqual(Entry.query.get(self.entry2_id).ai_summary, None)
