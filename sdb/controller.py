@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 
 print(os.getcwd())
 
@@ -75,3 +76,47 @@ def add_entries_to_db(entries, collection_id):
         db.session.add(current_entry)
 
     db.session.commit()
+
+
+def generate_excel_from_collection(collection_id):
+    """Generates excel file from db"""
+
+    # Get all entries from db
+    entries = Entry.query.filter_by(collection_id=collection_id).all()
+
+    # Create empty list to be populated with dicts
+    entries_list = []
+
+    # Iterate through entries and create dict for each
+    for e in entries:
+        current_entry = {
+            "date_posted": e.date_posted,
+            "publication": e.publication,
+            "title": e.title,
+            "title_translated": e.title_translated,
+            "full_text": e.full_text,
+            "full_text_translated": e.full_text_translated,
+            "ai_summary": e.ai_summary,
+            "link": e.link,
+        }
+        entries_list.append(current_entry)
+
+    # Create dataframe from list of dicts
+    df = pd.DataFrame(entries_list)
+
+    # Create the directory if it doesn't exist
+    os.makedirs("excels", exist_ok=True)
+
+    # Get current timestamp and format as string
+    current_timestamp = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    # Create excel writer object
+    writer = pd.ExcelWriter(
+        f"excels/output_collection{collection_id}_{current_timestamp}.xlsx"
+    )
+
+    # Write dataframe to excel
+    df.to_excel(writer, index=False)
+
+    # Save excel file
+    writer.close()
