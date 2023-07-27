@@ -3,6 +3,9 @@ from bs4 import BeautifulSoup
 
 # import every file from scrapers directory
 
+from sdb.scrapers.scraping_error import ScrapingError
+from sdb.scrapers.scrape_result import ScrapeResult
+
 from sdb.scrapers import (
     base_scraper,
     dez24,
@@ -22,7 +25,16 @@ class BaseScraperTestCase(TestCase):
 
         """Should raise TypeError when attempting to instantiate BaseScraper"""
         with self.assertRaises(TypeError):
-            base_scraper.Base_Scraper()
+            base_scraper.BaseScraper()
+
+    def test_get_soup_invalid(self):
+        """Does get_soup with an invalid url raise a ScrapingError?"""
+
+        test_scraper = dez24.DEZ24()
+
+        """Should raise ScrapingError when passed invalid url"""
+        with self.assertRaises(ScrapingError):
+            test_scraper.get_soup(url="https://invalid-url.sy")
 
     def test_reached_time_limit_loop(self):
         """Does reached_time_limit_loop return correct boolean?"""
@@ -46,26 +58,26 @@ class BaseScraperTestCase(TestCase):
         """Should return False if stop_timestamp is not passed into method"""
         self.assertFalse(test_scraper.reached_time_limit_loop(current_timestamp=1000))
 
-    def test_reached_time_limit_recurse(self):
-        """Does reached_time_limit_recurse return correct boolean?"""
+    def test_should_continue_pagination(self):
+        """Does should_continue_pagination return correct boolean?"""
 
         test_scraper = dez24.DEZ24()
 
         """Should return True if current_timestamp is greater than stop_timestamp"""
         self.assertTrue(
-            test_scraper.reached_time_limit_recurse(
+            test_scraper.should_continue_pagination(
                 stop_timestamp=1, current_timestamp=1000
             )
         )
 
         """Should return True if current_timestamp is equal to stop_timestamp"""
-        self.assertTrue(test_scraper.reached_time_limit_recurse(1, 1))
+        self.assertTrue(test_scraper.should_continue_pagination(1, 1))
 
         """Should return false if current_timestamp is less than stop_timestamp"""
-        self.assertFalse(test_scraper.reached_time_limit_recurse(1000, 1))
+        self.assertFalse(test_scraper.should_continue_pagination(1000, 1))
 
         """Shoulre return False if stop_timestamp is not passed into method"""
-        self.assertFalse(test_scraper.reached_time_limit_recurse(current_timestamp=1000))
+        self.assertFalse(test_scraper.should_continue_pagination(current_timestamp=1000))
 
 
 class DEZ24TestCase(TestCase):
@@ -97,10 +109,16 @@ class DEZ24TestCase(TestCase):
         self.assertTrue(isinstance(soup, BeautifulSoup))
 
     def test_get_news_articles_by_page(self):
-        """Does get_news_articles_by_page return list of articles?"""
+        """Does get_news_articles_by_page return dataclass with correct info?"""
 
-        article_list = self.dez24.get_news_articles_by_page(page_num=1)
-        self.assertEqual(len(article_list), 10)
+        scrape_result = self.dez24.get_news_articles_by_page(page_num=1)
+
+        """Does get_news_articles_by_page return ScrapeResult dataclass?"""
+        self.assertTrue(isinstance(scrape_result, ScrapeResult))
+
+        """Does ScrapeResult indicate success and contain an article list?"""
+        self.assertTrue(scrape_result.success)
+        self.assertEqual(len(scrape_result.article_list), 10)
 
     def test_get_article_text_and_last_updated(self):
         """Does get_article_text_and_last_updated return correct data?"""
@@ -145,10 +163,16 @@ class EnabBaladiTestCase(TestCase):
         self.assertTrue(isinstance(soup, BeautifulSoup))
 
     def test_get_news_articles_by_page(self):
-        """Does get_news_articles_by_page return list of articles?"""
+        """Does get_news_articles_by_page return dataclass with correct info?"""
 
-        article_list = self.enabbaladi.get_news_articles_by_page(page_num=1)
-        self.assertTrue(len(article_list) > 1)
+        scrape_result = self.enabbaladi.get_news_articles_by_page(page_num=1)
+
+        """Does get_news_articles_by_page return ScrapeResult dataclass?"""
+        self.assertTrue(isinstance(scrape_result, ScrapeResult))
+
+        """Does ScrapeResult indicate success and contain an article list?"""
+        self.assertTrue(scrape_result.success)
+        self.assertTrue(len(scrape_result.article_list) > 1)
 
     def test_get_article_text(self):
         """Does get_article_text return correct data"""
@@ -186,10 +210,16 @@ class HouranFLTestCase(TestCase):
         self.assertTrue(isinstance(soup, BeautifulSoup))
 
     def test_get_news_articles_by_page(self):
-        """Does get_news_articles_by_page return list of articles?"""
+        """Does get_news_articles_by_page return dataclass with correct info?"""
 
-        article_list = self.houranfl.get_news_articles_by_page(page_num=1)
-        self.assertTrue(len(article_list) > 1)
+        scrape_result = self.houranfl.get_news_articles_by_page(page_num=1)
+
+        """Does get_news_articles_by_page return ScrapeResult dataclass?"""
+        self.assertTrue(isinstance(scrape_result, ScrapeResult))
+
+        """Does get_news_articles_by_page indicate success and contain an article list?"""
+        self.assertTrue(scrape_result.success)
+        self.assertTrue(len(scrape_result.article_list) > 1)
 
     def test_get_article_text(self):
         """Does get-article_text return the article's text"""
@@ -211,7 +241,7 @@ class HouranFLTestCase(TestCase):
         self.assertTrue(timestamp == 1690084800)
 
 
-class SanaTestCase(TestCase):
+class SANATestCase(TestCase):
     """Tests for sana.py"""
 
     def setUp(self):
@@ -238,10 +268,16 @@ class SanaTestCase(TestCase):
         self.assertTrue(isinstance(soup, BeautifulSoup))
 
     def test_get_news_articles_by_page(self):
-        """Does get_news_articles_by_page return list of articles?"""
+        """Does get_news_articles_by_page return dataclass with correct info?"""
 
-        article_list = self.SANA.get_news_articles_by_page(page_num=1)
-        self.assertTrue(len(article_list) > 1)
+        scrape_result = self.SANA.get_news_articles_by_page(page_num=1)
+
+        """Does get_news_articles_by_page return ScrapeResult dataclass?"""
+        self.assertTrue(isinstance(scrape_result, ScrapeResult))
+
+        """Does get_news_articles_by_page indicate success and contain an article list?"""
+        self.assertTrue(scrape_result.success)
+        self.assertTrue(len(scrape_result.article_list) > 1)
 
     def test_get_article_text(self):
         """Does get_article_text return the article's text"""
@@ -292,10 +328,16 @@ class Suwayda24TestCase(TestCase):
         self.assertTrue(isinstance(soup, BeautifulSoup))
 
     def test_get_news_articles_by_page(self):
-        """Does get_news_articles_by_page return list of articles?"""
+        """Does get_news_articles_by_page return dataclass with correct info?"""
 
-        article_list = self.suwayda24.get_news_articles_by_page(page_num=1)
-        self.assertTrue(len(article_list) > 1)
+        scrape_result = self.suwayda24.get_news_articles_by_page(page_num=1)
+
+        """Does get_news_articles_by_page return ScrapeResult dataclass?"""
+        self.assertTrue(isinstance(scrape_result, ScrapeResult))
+
+        """Does get_news_articles_by_page indicate success and contain an article list?"""
+        self.assertTrue(scrape_result.success)
+        self.assertTrue(len(scrape_result.article_list) > 1)
 
     def test_get_article_text(self):
         """Does get_article_text return the article's text"""
@@ -342,10 +384,16 @@ class SyriaDirectTestCase(TestCase):
         self.assertTrue(isinstance(soup, BeautifulSoup))
 
     def test_get_news_articles_by_page(self):
-        """Does get_news_articles_by_page return list of articles?"""
+        """Does get_news_articles_by_page return dataclass with correct info?"""
 
-        article_list = self.syriadirect.get_news_articles_by_page(page_num=1)
-        self.assertTrue(len(article_list) > 1)
+        scrape_result = self.syriadirect.get_news_articles_by_page(page_num=1)
+
+        """Does get_news_articles_by_page return ScrapeResult dataclass?"""
+        self.assertTrue(isinstance(scrape_result, ScrapeResult))
+
+        """Does get_news_articles_by_page indicate success and contain an article list?"""
+        self.assertTrue(scrape_result.success)
+        self.assertTrue(len(scrape_result.article_list) > 1)
 
     def test_get_article_text(self):
         """Does get_article_text return text from article?"""
