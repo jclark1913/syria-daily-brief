@@ -17,6 +17,7 @@ cmake==3.26.4
 coverage==7.2.7
 ctranslate2==2.24.0
 decorator==5.1.1
+et-xmlfile==1.1.0
 exceptiongroup==1.1.1
 executing==1.2.0
 filelock==3.12.2
@@ -52,6 +53,7 @@ nvidia-cusparse-cu11==11.7.4.91
 nvidia-nccl-cu11==2.14.3
 nvidia-nvtx-cu11==11.7.91
 openai==0.27.8
+openpyxl==3.1.2
 outcome==1.2.0
 packaging==23.1
 pandas==2.0.2
