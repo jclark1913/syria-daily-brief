@@ -24,8 +24,5 @@ def get_ai_summary_for_arabic_text(text):
         ]
     )
 
-    # Return response
-    print(response["usage"])
-
     ai_summary = response["choices"][0]["message"]["content"]
     return ai_summary
