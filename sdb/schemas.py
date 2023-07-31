@@ -58,8 +58,23 @@ class MigrateSchema(ma.Schema):
     destination_collection_id = fields.Integer(required=True)
     delete_on_move = fields.Boolean(required=False)
 
+class PrintSchema(ma.Schema):
+    class Meta:
+        ordered = True
+        fields = ["collection_id"]
+
+    collection_id = fields.Integer(required=True)
+
 
 class TranslateSchema(ma.Schema):
+    class Meta:
+        ordered = True
+        fields = ["entry_ids"]
+
+    entry_ids = fields.List(fields.Integer(), required=True)
+
+
+class SummarizeSchema(ma.Schema):
     class Meta:
         ordered = True
         fields = ["entry_ids"]
