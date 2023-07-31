@@ -14,6 +14,12 @@ import sdb.translation as translation
 
 import sdb.ai_utils as ai_utils
 
+from sdb.controller import (
+    generate_excel_from_collection,
+    ScraperMap,
+    run_selected_scrapers,
+)
+
 # TODO: Consider Blueprints for API routes in Flask
 
 load_dotenv()
@@ -154,8 +160,6 @@ def get_entries_from_collection(collection_id):
     return jsonify({curr_coll.name: result})
 
 
-# PRINT COLLECTION TO EXCEL DATABASE
-
 ############# ENTRIES
 
 
@@ -214,6 +218,9 @@ def delete_single_entry(entry_id):
     return jsonify({"Deleted entry": entry_id})
 
 
+########### Complex operations
+
+
 # Translate multiple entries
 @app.post("/api/translate")
 def translate_entries():
@@ -252,9 +259,6 @@ def translate_entries():
     results = entry_schema.dump(entries)
 
     return jsonify({"Translated": results})
-
-
-# GET AI SUMMARY OF ENTRIES
 
 
 # Summarize multiple entries
@@ -298,6 +302,61 @@ def summarize_entries():
     return jsonify({"Summarized": results})
 
 
+# Print to excel
+
+
+@app.post("/api/print")
+def generate_excel():
+    """Generates an excel and saves it to the server"""
+
+    # Gets JSON from request
+    data = request.get_json()
+    collection_id = data["collection_id"]
+
+    # Verifies that collection exists
+    curr_coll = Collection.query.get_or_404(collection_id)
+
+    # Generates excel
+    try:
+        generate_excel_from_collection(collection_id)
+    except Exception as e:
+        return jsonify(error=str(e)), 400
+
+    return jsonify(message="Excel generated"), 200
+
+
+# Scraping
+
+
+@app.post("/api/scrape")
+def scrape_data():
+    """Scrapes data from selected websites and saves it to the database"""
+
+    data = request.get_json()
+
+    # Gets parameters from request
+    scraper_strings = data["selected_scrapers"]
+    stop_timestamp = data["stop_timestamp"]
+    collection_id = data["collection_id"]
+
+    # Gets enums corresponding to strings in scraper_strings
+    try:
+        selected_scrapers = [ScraperMap[scraper_str] for scraper_str in scraper_strings]
+    except KeyError as e:
+        raise Exception(f"Scraper {e} not found")
+
+    # Activates scrapers
+    try:
+        run_selected_scrapers(
+            selections=selected_scrapers,
+            stop_timestamp=stop_timestamp,
+            collection_id=collection_id,
+        )
+    except Exception as e:
+        return jsonify(error=str(e)), 400
+
+    return jsonify({"message": "Scraping complete"}), 200
+
 
 # Error handlers
 @app.errorhandler(404)
@@ -312,3 +371,9 @@ def handle_marshmallow_validation(err):
     """Error handler for Marshmallow validation errors"""
 
     return jsonify(errors=err.messages), 400
+
+@app.errorhandler(Exception)
+def global_error_handler(e):
+    """Global error handler"""
+
+    return jsonify(error=str(e)), 500
