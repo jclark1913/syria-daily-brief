@@ -216,7 +216,7 @@ class APIEntriesRoutesTestCase(TestCase):
         self.entry_id = self.entry.id
 
     def tearDown(self):
-        pass
+        db.session.rollback()
 
     def test_get_single_entry(self):
         """Does GET /api/entries/<entry_id> return the correct entry?"""
@@ -294,7 +294,7 @@ class APIEntriesRoutesTestCase(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class APITranslateRoutesTestCase(TestCase):
+class APITranslateTestCase(TestCase):
     """Tests for /api/translate"""
 
     def setUp(self):
@@ -336,7 +336,7 @@ class APITranslateRoutesTestCase(TestCase):
         self.entry2_id = self.entry2.id
 
     def tearDown(self):
-        pass
+        db.session
 
     # NOTE: In the future maybe consider using mock.patch decorators for cleaner code.
     def test_translate_entries(self):
@@ -391,7 +391,7 @@ class APITranslateRoutesTestCase(TestCase):
             self.assertEqual(response.status_code, 400)
 
             """Should return error message"""
-            self.assertEqual(data["error"], "No entries found")
+            self.assertEqual(data["error"], "No entries found.")
 
     def test_translate_entries_invalid(self):
         """Does POST /api/translate w/ invalid JSON data return ValidationError?"""
@@ -423,7 +423,7 @@ class APITranslateRoutesTestCase(TestCase):
             self.assertFalse(Entry.query.get(self.entry2_id).title_translated)
 
 
-class APISummarizeRoutesTestCase(TestCase):
+class APISummarizeTestCase(TestCase):
     """Tests for /api/summarize"""
 
     def setUp(self):
@@ -548,7 +548,7 @@ class APISummarizeRoutesTestCase(TestCase):
             self.assertEqual(response.status_code, 400)
 
             """Should return error message"""
-            self.assertEqual(data["error"], "No entries found")
+            self.assertEqual(data["error"], "No entries found.")
 
             """Should not update the database"""
             self.assertEqual(Entry.query.count(), 2)
@@ -579,3 +579,140 @@ class APISummarizeRoutesTestCase(TestCase):
             self.assertEqual(Entry.query.count(), 2)
             self.assertEqual(Entry.query.first().ai_summary, None)
             self.assertEqual(Entry.query.get(self.entry2_id).ai_summary, None)
+
+
+class APIMigrateEntriesTestCase(TestCase):
+    """Tests for /api/migrate"""
+
+    def setUp(self):
+        """Create test client, add sample data"""
+
+        db.drop_all()
+        db.create_all()
+
+        self.client = app.test_client()
+
+        self.collection1 = Collection(
+            name="Test Collection 1", description="Test Description 1"
+        )
+
+        db.session.add(self.collection1)
+        db.session.commit()
+
+        self.collection1_id = self.collection1.id
+
+        self.collection2 = Collection(
+            name="Test Collection 2", description="Test Description 2"
+        )
+
+        db.session.add(self.collection2)
+        db.session.commit()
+
+        self.collection2_id = self.collection2.id
+
+        self.entry1 = Entry(
+            title="عنوان المقالة الاولى",
+            collection_id=self.collection1_id,
+            publication="Test Publication",
+            full_text="هذا النص الكامل للمقالة الأولى في اللغة العربية",
+        )
+
+        self.entry2 = Entry(
+            title="عنوان المقالة الثانية",
+            collection_id=self.collection1_id,
+            publication="Test Publication",
+            full_text="هذا النص الكامل للمقالة الثانية في اللغة العربية",
+        )
+
+        db.session.add(self.entry1)
+        db.session.add(self.entry2)
+        db.session.commit()
+
+        self.entry1_id = self.entry1.id
+        self.entry2_id = self.entry2.id
+
+    def tearDown(self):
+        db.session.rollback()
+
+    def test_migrate_entries_copy(self):
+        """Does POST /api/migrate copy entries to new collection?"""
+
+        response = self.client.post(
+            "/api/migrate_entries",
+            json={
+                "entry_ids": [self.entry1_id, self.entry2_id],
+                "origin_collection_id": self.collection1_id,
+                "destination_collection_id": self.collection2_id,
+            },
+        )
+
+        data = response.json
+
+        origin_collection = Collection.query.get(self.collection1_id)
+        destination_collection = Collection.query.get(self.collection2_id)
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should return success message"""
+        self.assertEqual(
+            data["message"],
+            "2 entries added to Test Collection 2 from Test Collection 1.",
+        )
+
+        """Should copy entries to destination collection w/o deleting them"""
+        self.assertEqual(Entry.query.count(), 4)
+        self.assertEqual(len(origin_collection.entries), 2)
+        self.assertEqual(len(destination_collection.entries), 2)
+
+    def test_migrate_entries_delete(self):
+        """Does POST /api/migrate_entries move entries to new collection and delete from old?"""
+
+        response = self.client.post(
+            "/api/migrate_entries",
+            json={
+                "entry_ids": [self.entry1_id, self.entry2_id],
+                "origin_collection_id": self.collection1_id,
+                "destination_collection_id": self.collection2_id,
+                "delete_on_move": True,
+            },
+        )
+
+        data = response.json
+
+        origin_collection = Collection.query.get(self.collection1_id)
+        destination_collection = Collection.query.get(self.collection2_id)
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should return success message"""
+        self.assertEqual(
+            data["message"],
+            "2 entries added to Test Collection 2 from Test Collection 1. 2 entries deleted from Test Collection 1.",
+        )
+
+        """Should move entries to destination collection and delete from origin collection"""
+        self.assertEqual(Entry.query.count(), 2)
+        self.assertEqual(len(origin_collection.entries), 0)
+        self.assertEqual(len(destination_collection.entries), 2)
+
+    def test_migrate_entries_no_entries(self):
+        """Does POST /api/migrate_entries return error if no entries given?"""
+
+        response = self.client.post(
+            "/api/migrate_entries",
+            json={
+                "entry_ids": [],
+                "origin_collection_id": self.collection1_id,
+                "destination_collection_id": self.collection2_id,
+            },
+        )
+
+        data = response.json
+
+        """Should return 400 status code"""
+        self.assertEqual(response.status_code, 400)
+
+        """Should return error message"""
+        self.assertEqual(data["error"], "No entries found.")
