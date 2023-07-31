@@ -41,7 +41,7 @@ def run_selected_scrapers(selections, stop_timestamp, collection_id):
 
     # Verify that collection exists before scraping starts
     try:
-        curr_coll = Collection.query.get_or_404(collection_id)
+        Collection.query.get_or_404(collection_id)
     except Exception as e:
         raise Exception(f"Collection with id {collection_id} does not exist")
 
