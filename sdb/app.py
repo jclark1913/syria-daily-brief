@@ -3,23 +3,26 @@ from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify
 from flask_marshmallow import Marshmallow
-
-from sdb.models import db, connect_db, Collection, Entry
-
-from sdb.schemas import CollectionSchema, EntrySchema, MigrateSchema, TranslateSchema
-
 from marshmallow import ValidationError
 
-import sdb.translation as translation
-
 import sdb.ai_utils as ai_utils
-
 from sdb.controller import (
     generate_excel_from_collection,
     ScraperMap,
     run_selected_scrapers,
     add_entries_to_db,
 )
+from sdb.models import db, connect_db, Collection, Entry
+from sdb.schemas import (
+    CollectionSchema,
+    SummarizeSchema,
+    EntrySchema,
+    MigrateSchema,
+    PrintSchema,
+    TranslateSchema,
+)
+import sdb.translation as translation
+
 
 # TODO: Consider Blueprints for API routes in Flask
 
@@ -170,7 +173,7 @@ def get_single_entry(entry_id):
 
     Returns: {id: ..., title: ..., ...}
     """
-    # TODO: Consider querying for collection first, then going down to entry
+
     curr_entry = Entry.query.get_or_404(entry_id)
     entry_schema = EntrySchema()
 
@@ -183,7 +186,7 @@ def get_single_entry(entry_id):
 def edit_single_entry(entry_id):
     """Edits single entry
 
-    Returns: {Entry updated}
+    Returns: {Entry updated: {id: ..., title: ..., ...}
     """
 
     data = request.get_json()
@@ -207,7 +210,7 @@ def edit_single_entry(entry_id):
 def delete_single_entry(entry_id):
     """Deletes single entry
 
-    Returns: {Entry deleted}
+    Returns: {Entry deleted: entry_id}
     """
 
     curr_entry = Entry.query.get_or_404(entry_id)
@@ -218,16 +221,15 @@ def delete_single_entry(entry_id):
     return jsonify({"Deleted entry": entry_id})
 
 
-########### Complex operations
+########### Special operations
 
 
 @app.post("/api/migrate_entries")
 def add_entry_to_collection():
     """Adds entries to a given collection and returns updated collection.
 
-    Returns: {'message': '2 entries added to collection. 1 entry deleted.'}"""
-
-    # TODO: Add schema validation
+    Returns: {'message': '2 entries added to collection. 1 entry deleted.'}
+    """
 
     # Get JSON and load schema
     data = request.get_json()
@@ -259,7 +261,7 @@ def add_entry_to_collection():
 
     message = f"{len(entries_dicts)} entries added to {destination_collection.name} from {origin_collection.name}."
 
-    # Delete entries if delete_on_move is True
+    # Delete original entries if delete_on_move is True
     if delete_on_move:
         delete_message = f" {len(entries_original)} entries deleted."
         for entry in entries_original:
@@ -329,8 +331,6 @@ def summarize_entries():
                 [{id: 1 ...}, ...]}
     """
 
-    # TODO: Add schema validation
-
     # Load OpenAI API key (will return None if not found)
     openai_api_key = os.getenv("OPENAI_API_KEY")
 
@@ -340,6 +340,10 @@ def summarize_entries():
 
     # Gets JSON from request
     data = request.get_json()
+
+    # Validate JSON schema
+    summarize_schema = SummarizeSchema()
+    summarize_schema.load(data)
 
     # Gets list of entry ids
     entry_ids = data["entry_ids"]
@@ -367,14 +371,16 @@ def summarize_entries():
 def generate_excel():
     """Generates an excel and saves it to the server"""
 
-    # TODO: Add schema validation
-
     # Gets JSON from request
     data = request.get_json()
+
+    # Verify and get JSON data
+    print_schema = PrintSchema()
+    print_schema.load(data)
     collection_id = data["collection_id"]
 
     # Verifies that collection exists
-    curr_coll = Collection.query.get_or_404(collection_id)
+    Collection.query.get_or_404(collection_id)
 
     # Generates excel
     try:
