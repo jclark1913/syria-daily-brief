@@ -220,16 +220,23 @@ def delete_single_entry(entry_id):
 
 ########### Complex operations
 
+
 @app.post("/api/migrate_entries")
 def add_entry_to_collection():
     """Adds entries to a given collection and returns updated collection.
 
     Returns: {'message': '2 entries added to collection. 1 entry deleted.'}"""
 
-    #TODO: Add schema validation
+    # TODO: Add schema validation
 
     # Get JSON and load schema
     data = request.get_json()
+
+    # Verify JSON schema
+    migrate_schema = MigrateSchema()
+    migrate_schema.load(data)
+
+    # Get data from JSON
     entry_ids = data["entry_ids"]
     origin_collection_id = data["origin_collection_id"]
     destination_collection_id = data["destination_collection_id"]
@@ -265,6 +272,7 @@ def add_entry_to_collection():
         200,
     )
 
+
 # Translate multiple entries
 @app.post("/api/translate")
 def translate_entries():
@@ -276,8 +284,6 @@ def translate_entries():
     Returns: {"Translated":
                 [{id: 1 ...}, ...]}
     """
-
-    #TODO: Add schema validation
 
     # Gets JSON from request
     data = request.get_json()
@@ -323,7 +329,7 @@ def summarize_entries():
                 [{id: 1 ...}, ...]}
     """
 
-    #TODO: Add schema validation
+    # TODO: Add schema validation
 
     # Load OpenAI API key (will return None if not found)
     openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -361,7 +367,7 @@ def summarize_entries():
 def generate_excel():
     """Generates an excel and saves it to the server"""
 
-    #TODO: Add schema validation
+    # TODO: Add schema validation
 
     # Gets JSON from request
     data = request.get_json()
