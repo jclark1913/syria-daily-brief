@@ -74,7 +74,6 @@ class APICollectionsRoutesTestCase(TestCase):
         self.assertEqual(data["created"]["name"], "New Collection")
         self.assertEqual(data["created"]["description"], "New Description")
 
-
         """Should add new collection to db"""
         self.assertEqual(Collection.query.count(), 2)
         self.assertTrue(new_collection.name == "New Collection")
@@ -360,9 +359,7 @@ class APITranslateRoutesTestCase(TestCase):
 
             """Should return JSON of translated entries"""
             self.assertEqual(len(data["Translated"]), 2)
-            self.assertEqual(
-                data["Translated"][0]["title_translated"], "English Title"
-            )
+            self.assertEqual(data["Translated"][0]["title_translated"], "English Title")
             self.assertEqual(
                 data["Translated"][1]["full_text_translated"], "English Text"
             )
@@ -371,11 +368,15 @@ class APITranslateRoutesTestCase(TestCase):
             self.assertEqual(Entry.query.count(), 2)
             self.assertEqual(Entry.query.first().title_translated, "English Title")
             self.assertEqual(Entry.query.first().full_text_translated, "English Text")
-            self.assertEqual(Entry.query.get(self.entry2_id).title_translated, "English Title")
-            self.assertEqual(Entry.query.get(self.entry2_id).full_text_translated, "English Text")
+            self.assertEqual(
+                Entry.query.get(self.entry2_id).title_translated, "English Title"
+            )
+            self.assertEqual(
+                Entry.query.get(self.entry2_id).full_text_translated, "English Text"
+            )
 
-    def test_translate_entries_invalid(self):
-        """Does POST /api/translate w/ invalid data (nonexistant entry) return empty array?"""
+    def test_translate_entries_not_found(self):
+        """Does POST /api/translate w/ invalid data (nonexistant entry) return error message?"""
 
         with mock.patch(
             "sdb.translation.get_translated_entry_title_and_text",
@@ -383,15 +384,43 @@ class APITranslateRoutesTestCase(TestCase):
         ), mock.patch(
             "sdb.translation.initialize_argostranslate", mock.Mock(return_value=None)
         ):
-
             response = self.client.post("/api/translate", json={"entry_ids": [1000]})
             data = response.json
 
             """Should return 400 status code"""
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 400)
 
-            """Should return empty array"""
-            self.assertEqual(data["Translated"], [])
+            """Should return error message"""
+            self.assertEqual(data["error"], "No entries found")
+
+    def test_translate_entries_invalid(self):
+        """Does POST /api/translate w/ invalid JSON data return ValidationError?"""
+
+        with mock.patch(
+            "sdb.translation.get_translated_entry_title_and_text",
+            mock.Mock(return_value=["English Title", "English Text"]),
+        ), mock.patch(
+            "sdb.translation.initialize_argostranslate", mock.Mock(return_value=None)
+        ):
+            response = self.client.post(
+                "/api/translate",
+                json={
+                    "entry_ids": [self.entry1_id, self.entry2_id, 1000],
+                    "invalid": "invalid",
+                },
+            )
+
+            data = response.json
+
+            """Should return 400 status code"""
+            self.assertEqual(response.status_code, 400)
+
+            """Should return errors"""
+            self.assertEqual(data["errors"]["invalid"][0], "Unknown field.")
+
+            """Should not update the database"""
+            self.assertFalse(Entry.query.get(self.entry1_id).title_translated)
+            self.assertFalse(Entry.query.get(self.entry2_id).title_translated)
 
 
 class APISummarizeRoutesTestCase(TestCase):
@@ -440,7 +469,7 @@ class APISummarizeRoutesTestCase(TestCase):
 
         with mock.patch(
             "sdb.ai_utils.get_ai_summary_for_arabic_text",
-            mock.Mock(return_value="Summarized Text")
+            mock.Mock(return_value="Summarized Text"),
         ):
             response = self.client.post(
                 "/api/summarize",
@@ -460,16 +489,19 @@ class APISummarizeRoutesTestCase(TestCase):
             """Should update the database"""
             self.assertEqual(Entry.query.count(), 2)
             self.assertEqual(Entry.query.first().ai_summary, "Summarized Text")
-            self.assertEqual(Entry.query.get(self.entry2_id).ai_summary, "Summarized Text")
+            self.assertEqual(
+                Entry.query.get(self.entry2_id).ai_summary, "Summarized Text"
+            )
 
     """NOTE: This mocking approach is interesting. In order to get this working,
     I did have to make sure that openai_api_key was defined in the route rather
     than at the top of app.py. I don't think this is an issue, but I should do
     some more research on this."""
 
-    @patch('os.getenv')
+    @patch("os.getenv")
     def test_summarize_entries_invalid(self, mock_getenv):
         """Should return error if api key not found"""
+
         def side_effect(arg):
             if arg == "OPENAI_API_KEY":
                 return None
@@ -480,7 +512,7 @@ class APISummarizeRoutesTestCase(TestCase):
 
         with mock.patch(
             "sdb.ai_utils.get_ai_summary_for_arabic_text",
-            mock.Mock(return_value="Summarized Text")
+            mock.Mock(return_value="Summarized Text"),
         ):
             response = self.client.post(
                 "/api/summarize",
