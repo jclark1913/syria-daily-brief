@@ -6,7 +6,7 @@ from flask_marshmallow import Marshmallow
 
 from sdb.models import db, connect_db, Collection, Entry
 
-from sdb.schemas import CollectionSchema, EntrySchema
+from sdb.schemas import CollectionSchema, EntrySchema, MigrateSchema, TranslateSchema
 
 from marshmallow import ValidationError
 
@@ -18,6 +18,7 @@ from sdb.controller import (
     generate_excel_from_collection,
     ScraperMap,
     run_selected_scrapers,
+    add_entries_to_db,
 )
 
 # TODO: Consider Blueprints for API routes in Flask
@@ -151,8 +152,7 @@ def get_entries_from_collection(collection_id):
     """
 
     curr_coll = Collection.query.get_or_404(collection_id)
-    # TODO: use db relationship instead
-    entries = Entry.query.filter_by(collection_id=collection_id)
+    entries = curr_coll.entries
     entry_schema = EntrySchema(many=True)
 
     result = entry_schema.dump(entries)
@@ -220,6 +220,50 @@ def delete_single_entry(entry_id):
 
 ########### Complex operations
 
+@app.post("/api/migrate_entries")
+def add_entry_to_collection():
+    """Adds entries to a given collection and returns updated collection.
+
+    Returns: {'message': '2 entries added to collection. 1 entry deleted.'}"""
+
+    #TODO: Add schema validation
+
+    # Get JSON and load schema
+    data = request.get_json()
+    entry_ids = data["entry_ids"]
+    origin_collection_id = data["origin_collection_id"]
+    destination_collection_id = data["destination_collection_id"]
+    delete_on_move = data.get("delete_on_move", False)
+    entry_schema = EntrySchema()
+
+    # Verify collections exist
+    origin_collection = Collection.query.get_or_404(origin_collection_id)
+    destination_collection = Collection.query.get_or_404(destination_collection_id)
+
+    # Get entries from db
+    entries_original = Entry.query.filter(Entry.id.in_(entry_ids)).all()
+
+    # Destructure entries into list of dicts
+    entries_dicts = [entry_schema.dump(entry) for entry in entries_original]
+    print(entries_dicts)
+
+    # Update db
+    add_entries_to_db(entries=entries_dicts, collection_id=destination_collection_id)
+
+    message = f"{len(entries_dicts)} entries added to {destination_collection.name} from {origin_collection.name}."
+
+    # Delete entries if delete_on_move is True
+    if delete_on_move:
+        delete_message = f" {len(entries_original)} entries deleted."
+        for entry in entries_original:
+            db.session.delete(entry)
+        db.session.commit()
+        message += delete_message
+
+    return (
+        jsonify(message=message),
+        200,
+    )
 
 # Translate multiple entries
 @app.post("/api/translate")
@@ -233,8 +277,14 @@ def translate_entries():
                 [{id: 1 ...}, ...]}
     """
 
+    #TODO: Add schema validation
+
     # Gets JSON from request
     data = request.get_json()
+
+    # Validate JSON schema
+    translate_schema = TranslateSchema()
+    translate_schema.load(data)
 
     # Gets list of entry ids
     entry_ids = data["entry_ids"]
@@ -273,6 +323,8 @@ def summarize_entries():
                 [{id: 1 ...}, ...]}
     """
 
+    #TODO: Add schema validation
+
     # Load OpenAI API key (will return None if not found)
     openai_api_key = os.getenv("OPENAI_API_KEY")
 
@@ -309,6 +361,8 @@ def summarize_entries():
 def generate_excel():
     """Generates an excel and saves it to the server"""
 
+    #TODO: Add schema validation
+
     # Gets JSON from request
     data = request.get_json()
     collection_id = data["collection_id"]
@@ -331,6 +385,8 @@ def generate_excel():
 @app.post("/api/scrape")
 def scrape_data():
     """Scrapes data from selected websites and saves it to the database"""
+
+    # TODO: Add schema validation
 
     data = request.get_json()
 
@@ -371,6 +427,7 @@ def handle_marshmallow_validation(err):
     """Error handler for Marshmallow validation errors"""
 
     return jsonify(errors=err.messages), 400
+
 
 @app.errorhandler(Exception)
 def global_error_handler(e):
