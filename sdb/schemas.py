@@ -41,3 +41,27 @@ class EntrySchema(ma.Schema):
     link = fields.String()
     date_posted = fields.String()  # Update to date?
     ai_summary = fields.String()
+
+
+class MigrateSchema(ma.Schema):
+    class Meta:
+        ordered = True
+        fields = (
+            "entry_ids",
+            "origin_collection_id",
+            "destination_collection_id",
+            "delete_on_move",
+        )
+
+    entry_ids = fields.List(fields.Integer(), required=True)
+    origin_collection_id = fields.Integer(required=True)
+    destination_collection_id = fields.Integer(required=True)
+    delete_on_move = fields.Boolean(required=False)
+
+
+class TranslateSchema(ma.Schema):
+    class Meta:
+        ordered = True
+        fields = ["entry_ids"]
+
+    entry_ids = fields.List(fields.Integer(), required=True)
