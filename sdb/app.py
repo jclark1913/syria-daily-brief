@@ -225,7 +225,7 @@ def delete_single_entry(entry_id):
 
 
 @app.post("/api/migrate_entries")
-def add_entry_to_collection():
+def migrate_entries():
     """Adds entries to a given collection and returns updated collection.
 
     Returns: {'message': '2 entries added to collection. 1 entry deleted.'}
@@ -252,9 +252,12 @@ def add_entry_to_collection():
     # Get entries from db
     entries_original = Entry.query.filter(Entry.id.in_(entry_ids)).all()
 
+    # Return error if no entries found
+    if not entries_original:
+        return jsonify({"error": "No entries found."}), 400
+
     # Destructure entries into list of dicts
     entries_dicts = [entry_schema.dump(entry) for entry in entries_original]
-    print(entries_dicts)
 
     # Update db
     add_entries_to_db(entries=entries_dicts, collection_id=destination_collection_id)
@@ -263,7 +266,7 @@ def add_entry_to_collection():
 
     # Delete original entries if delete_on_move is True
     if delete_on_move:
-        delete_message = f" {len(entries_original)} entries deleted."
+        delete_message = f" {len(entries_original)} entries deleted from {origin_collection.name}."
         for entry in entries_original:
             db.session.delete(entry)
         db.session.commit()
@@ -302,7 +305,7 @@ def translate_entries():
     entries = Entry.query.filter(Entry.id.in_(entry_ids))
 
     if not entries.all():
-        return jsonify({"error": "No entries found"}), 400
+        return jsonify({"error": "No entries found."}), 400
 
     # Translate all entries in list if list contains values
     translation.initialize_argostranslate()
@@ -356,7 +359,7 @@ def summarize_entries():
 
     # Return error if no entries found
     if not entries.all():
-        return jsonify({"error": "No entries found"}), 400
+        return jsonify({"error": "No entries found."}), 400
 
     # Summarize all entries in list if list contains values
     if entries:
