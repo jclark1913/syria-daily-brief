@@ -354,6 +354,10 @@ def summarize_entries():
     # Filters for entry ids with query
     entries = Entry.query.filter(Entry.id.in_(entry_ids))
 
+    # Return error if no entries found
+    if not entries.all():
+        return jsonify({"error": "No entries found"}), 400
+
     # Summarize all entries in list if list contains values
     if entries:
         for e in entries:
