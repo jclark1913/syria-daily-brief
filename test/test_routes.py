@@ -716,3 +716,9 @@ class APIMigrateEntriesTestCase(TestCase):
 
         """Should return error message"""
         self.assertEqual(data["error"], "No entries found.")
+
+        """Should not update the database"""
+        self.assertEqual(Entry.query.count(), 2)
+        self.assertEqual(len(self.collection1.entries), 2)
+        self.assertEqual(len(self.collection2.entries), 0)
+
