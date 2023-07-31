@@ -464,7 +464,7 @@ class APISummarizeTestCase(TestCase):
         self.entry1_id = self.entry1.id
         self.entry2_id = self.entry2.id
 
-    @patch("os.getenv", return_value="test")
+    @patch("os.getenv", return_value="TEST_API_KEY")
     def test_summarize_entries(self, mock_getenv):
         """Does POST /api/summarize return summarize multiple entries and update the database?"""
 
@@ -499,17 +499,9 @@ class APISummarizeTestCase(TestCase):
     than at the top of app.py. I don't think this is an issue, but I should do
     some more research on this."""
 
-    @patch("os.getenv")
+    @patch("os.getenv", return_value=None)
     def test_summarize_entries_no_key(self, mock_getenv):
         """Should return error if api key not found"""
-
-        def side_effect(arg):
-            if arg == "OPENAI_API_KEY":
-                return None
-            else:
-                return os.environ.get(arg)
-
-        mock_getenv.side_effect = side_effect
 
         with mock.patch(
             "sdb.ai_utils.get_ai_summary_for_arabic_text",
@@ -722,3 +714,95 @@ class APIMigrateEntriesTestCase(TestCase):
         self.assertEqual(len(self.collection1.entries), 2)
         self.assertEqual(len(self.collection2.entries), 0)
 
+
+class APIPrintTestCase(TestCase):
+    """Tests for /api/print"""
+
+    def setUp(self):
+        """Set up test client and sample data"""
+
+        self.client = app.test_client()
+
+        self.collection = Collection(
+            name="Test Collection", description="Test Description"
+        )
+
+        db.session.add(self.collection)
+        db.session.commit()
+
+        self.collection_id = self.collection.id
+
+        self.entry1 = Entry(
+            title="عنوان المقالة الاولى",
+            collection_id=self.collection_id,
+            publication="Test Publication",
+            full_text="هذا النص الكامل للمقالة الأولى في اللغة العربية",
+        )
+
+        self.entry2 = Entry(
+            title="عنوان المقالة الثانية",
+            collection_id=self.collection_id,
+            publication="Test Publication",
+            full_text="هذا النص الكامل للمقالة الثانية في اللغة العربية",
+        )
+
+        db.session.add(self.entry1)
+        db.session.add(self.entry2)
+        db.session.commit()
+
+        self.entry1_id = self.entry1.id
+        self.entry2_id = self.entry2.id
+
+    def tearDown(self):
+        db.session.rollback()
+
+    @patch("sdb.app.generate_excel_from_collection", return_value="test")
+    def test_print(self, mock_print):
+        """Does POST /api/print run without errors?"""
+
+        response = self.client.post(
+            "/api/print",
+            json={
+                "collection_id": self.collection_id,
+            },
+        )
+
+        data = response.json
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should return success message"""
+        self.assertEqual(data["message"], "Excel generated")
+
+    def test_print_invalid_collection(self):
+        """Does POST /api/print return error if collection does not exist?"""
+
+        response = self.client.post(
+            "/api/print",
+            json={
+                "collection_id": 100,
+            },
+        )
+
+        """Should return 404 status code"""
+        self.assertEqual(response.status_code, 404)
+
+    def test_print_invalid_JSON(self):
+        """Does POST /api/print return error if JSON is invalid?"""
+
+        response = self.client.post(
+            "/api/print",
+            json={
+                "collection_id": 1,
+                "invalid": "invalid",
+            },
+        )
+
+        data = response.json
+
+        """Should return 400 status code"""
+        self.assertEqual(response.status_code, 400)
+
+        """Should return error message"""
+        self.assertEqual(data["errors"]["invalid"][0], "Unknown field.")
