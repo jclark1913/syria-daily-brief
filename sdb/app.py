@@ -301,18 +301,20 @@ def translate_entries():
     # Filters for entry ids with query
     entries = Entry.query.filter(Entry.id.in_(entry_ids))
 
+    if not entries.all():
+        return jsonify({"error": "No entries found"}), 400
+
     # Translate all entries in list if list contains values
-    if entries:
-        translation.initialize_argostranslate()
+    translation.initialize_argostranslate()
 
-        for e in entries:
-            [en_title, en_full_text] = translation.get_translated_entry_title_and_text(
-                e
-            )
-            e.title_translated = en_title
-            e.full_text_translated = en_full_text
+    for e in entries:
+        [en_title, en_full_text] = translation.get_translated_entry_title_and_text(
+            e
+        )
+        e.title_translated = en_title
+        e.full_text_translated = en_full_text
 
-        db.session.commit()
+    db.session.commit()
 
     results = entry_schema.dump(entries)
 
