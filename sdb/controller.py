@@ -1,8 +1,6 @@
 import os
 import pandas as pd
 
-print(os.getcwd())
-
 from sdb.scrapers import (
     dez24,
     enabbaladi,
@@ -12,7 +10,7 @@ from sdb.scrapers import (
     syriadirect,
 )
 
-from sdb.models import db, Entry
+from sdb.models import db, Entry, Collection
 
 from enum import Enum
 
@@ -40,6 +38,12 @@ def run_selected_scrapers(selections, stop_timestamp, collection_id):
 
     # Empty list for errors
     errors = []
+
+    # Verify that collection exists before scraping starts
+    try:
+        curr_coll = Collection.query.get_or_404(collection_id)
+    except Exception as e:
+        raise Exception(f"Collection with id {collection_id} does not exist")
 
     # Iterate through selections and run each scraper individually
     for scraper in selections:
@@ -112,7 +116,7 @@ def generate_excel_from_collection(collection_id):
 
     # Create excel writer object
     writer = pd.ExcelWriter(
-        f"excels/output_collection{collection_id}_{current_timestamp}.xlsx"
+        f"../excels/output_collection{collection_id}_{current_timestamp}.xlsx"
     )
 
     # Write dataframe to excel
