@@ -464,7 +464,8 @@ class APISummarizeRoutesTestCase(TestCase):
         self.entry1_id = self.entry1.id
         self.entry2_id = self.entry2.id
 
-    def test_summarize_entries(self):
+    @patch("os.getenv", return_value="test")
+    def test_summarize_entries(self, mock_getenv):
         """Does POST /api/summarize return summarize multiple entries and update the database?"""
 
         with mock.patch(
@@ -499,7 +500,7 @@ class APISummarizeRoutesTestCase(TestCase):
     some more research on this."""
 
     @patch("os.getenv")
-    def test_summarize_entries_invalid(self, mock_getenv):
+    def test_summarize_entries_no_key(self, mock_getenv):
         """Should return error if api key not found"""
 
         def side_effect(arg):
@@ -526,6 +527,53 @@ class APISummarizeRoutesTestCase(TestCase):
 
             """Should return error message"""
             self.assertEqual(data["error"], "No OpenAI API key found")
+
+            """Should not update the database"""
+            self.assertEqual(Entry.query.count(), 2)
+            self.assertEqual(Entry.query.first().ai_summary, None)
+            self.assertEqual(Entry.query.get(self.entry2_id).ai_summary, None)
+
+    def test_summarize_entries_no_entries(self):
+        """Should return error if no entries given"""
+
+        with mock.patch(
+            "sdb.ai_utils.get_ai_summary_for_arabic_text",
+            mock.Mock(return_value="Summarized Text"),
+        ):
+            response = self.client.post("/api/summarize", json={"entry_ids": []})
+
+            data = response.json
+
+            """Should return 400 status code"""
+            self.assertEqual(response.status_code, 400)
+
+            """Should return error message"""
+            self.assertEqual(data["error"], "No entries found")
+
+            """Should not update the database"""
+            self.assertEqual(Entry.query.count(), 2)
+            self.assertEqual(Entry.query.first().ai_summary, None)
+            self.assertEqual(Entry.query.get(self.entry2_id).ai_summary, None)
+
+    def test_summarize_entries_invalid_entry(self):
+        """Should return error if invalid entry given"""
+
+        with mock.patch(
+            "sdb.ai_utils.get_ai_summary_for_arabic_text",
+            mock.Mock(return_value="Summarized Text"),
+        ):
+            response = self.client.post(
+                "/api/summarize",
+                json={"entry_ids": [self.entry1_id], "invalid": "invalid"},
+            )
+
+            data = response.json
+
+            """Should return 400 status code"""
+            self.assertEqual(response.status_code, 400)
+
+            """Should return error message"""
+            self.assertEqual(data["errors"]["invalid"][0], "Unknown field.")
 
             """Should not update the database"""
             self.assertEqual(Entry.query.count(), 2)
