@@ -1,6 +1,7 @@
 import os
 from unittest import TestCase, mock
 from unittest.mock import patch
+from sdb.controller import ScraperMap
 from sdb.models import db, Collection, Entry
 
 os.environ["DATABASE_URL"] = "postgresql:///sdb_test"
@@ -806,3 +807,106 @@ class APIPrintTestCase(TestCase):
 
         """Should return error message"""
         self.assertEqual(data["errors"]["invalid"][0], "Unknown field.")
+
+
+class APIScrapeTestCase(TestCase):
+    """Tests for /api/scrape"""
+
+    def setUp(self):
+        """Create test client, add sample data."""
+
+        Collection.query.delete()
+        Entry.query.delete()
+
+        self.client = app.test_client()
+
+        self.collection = Collection(
+            name="Test Collection", description="Test Description"
+        )
+
+        db.session.add(self.collection)
+        db.session.commit()
+
+    def tearDown(self):
+        db.session.rollback()
+
+    @patch("sdb.app.run_selected_scrapers", return_value=None)
+    def test_scrape_data(self, mock_run_selected_scrapers):
+        """Does POST /api/scrape scrape entries from publications?"""
+
+        response = self.client.post(
+            "/api/scrape",
+            json={
+                "collection_id": self.collection.id,
+                "selected_scrapers": ["SANA", "ENABBALADI"],
+                "stop_timestamp": 1234567890,
+            },
+        )
+
+        data = response.json
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should return success message"""
+        self.assertEqual(
+            data["message"],
+            "Scraping complete.",
+        )
+
+        """selected_scrapers should correspond to the correct scrapers"""
+        mock_run_selected_scrapers.assert_called_once_with(
+            selections=[ScraperMap.SANA, ScraperMap.ENABBALADI],
+            stop_timestamp=1234567890,
+            collection_id=self.collection.id,
+        )
+
+    @patch("sdb.app.run_selected_scrapers", return_value=None)
+    def test_scrape_data_invalid_selections(self, mock_run_selected_scrapers):
+        """Does POST /api/scrape return error if selections are invalid?"""
+
+        response = self.client.post(
+            "/api/scrape",
+            json={
+                "collection_id": self.collection.id,
+                "selected_scrapers": ["INVALID"],
+                "stop_timestamp": 1234567890,
+            },
+        )
+
+        data = response.json
+
+        """Should return 400 status code"""
+        self.assertEqual(response.status_code, 400)
+
+        """Should return error message"""
+        self.assertEqual(data["error"], "Scraper 'INVALID' not found.")
+
+        """Should not call run_selected_scrapers"""
+        mock_run_selected_scrapers.assert_not_called()
+
+    @patch("sdb.app.run_selected_scrapers", return_value=None)
+    def test_scrape_data_invalid_JSON(self, mock_run_selected_scrapers):
+        """Does POST /api/scrape return error if JSON is invalid?"""
+
+        response = self.client.post(
+            "/api/scrape",
+            json={
+                "collection_id": "String",
+                "selected_scrapers": "SANA",
+                "stop_timestamp": "String",
+            }
+        )
+
+        data = response.json
+
+        """Should return 400 status code"""
+        self.assertEqual(response.status_code, 400)
+
+        """Should return error message"""
+        self.assertEqual(data["errors"]["collection_id"][0], "Not a valid integer.")
+        self.assertEqual(data["errors"]["selected_scrapers"][0], "Not a valid list.")
+        self.assertEqual(data["errors"]["stop_timestamp"][0], "Not a valid integer.")
+
+        """Should not call run_selected_scrapers"""
+        mock_run_selected_scrapers.assert_not_called()
