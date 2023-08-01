@@ -1,115 +1,62 @@
-from sdb.scrapers.base_scraper import BaseScraper
-import sdb.scrapers.utils as utils
-from sdb.scrapers.scraping_error import ScrapingError
-from sdb.scrapers.scrape_result import ScrapeResult
+from sdb.scrapers.base_scraper import BaseScraper, ScraperConfig
 
-import time
 import datetime
+import json
+
+HouranFL_config = ScraperConfig(
+    url_template="https://www.horanfree.com/page/{page_num}?cat=%2A",
+    publication="Houran Free League",
+    can_get_metadata_from_page=False,
+)
 
 
 class HouranFL(BaseScraper):
     def __init__(self):
-        self.url_template = "https://www.horanfree.com/page/{page_num}?cat=%2A"
-        self.publication = "Houran Free League"
+        self.config = HouranFL_config
 
-    def get_news_articles_by_page(self, page_num=1, stop_timestamp=False):
-        """Scrapes a single page of HFL articles until time limit reached."""
+    def find_all_articles(self, soup):
+        """Returns all articles on a page."""
 
-        # Dataclass scrape result to be returned
-        scrape_result = ScrapeResult()
-        url_template = self.url_template
+        return soup.find_all("li", class_="post-item")
 
-        while True:
-            # Generate correct url from template
-            url = url_template.format(page_num=page_num)
+    def find_article_title(self, article):
+        """Returns title of article."""
 
-            # bs4 setup
-            try:
-                soup = self.get_soup(url=url)
-            except ScrapingError as e:
-                print(f"Scraping error: {e}")
-                scrape_result.success = False
-                scrape_result.error_message = str(e)
-                return scrape_result
+        return article.find("h2", class_="post-title").text
 
-            articles = soup.find_all("li", class_="post-item")
+    def find_article_link(self, article):
+        """Returns link to article."""
 
-            count = 1
+        return article.find("a", class_=None).get("href")
 
-            # Gathers article info for each post on single page
-            for a in articles:
-                # identifies date posted and generates Unix timestamp
-                date_posted = a.find("span", class_="date meta-item tie-icon").text
-                current_timestamp = self.get_timestamp_from_arabic_latin_date_HFL(
-                    date_posted
-                )
-                link = a.find("a", class_=None).get("href")
-
-                # Breaks loop if timestamp reached
-                if self.reached_time_limit_loop(
-                    stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
-                ):
-                    return scrape_result
-
-                # Gets title and basic data and creates dict for article
-                article = {
-                    "date_posted": current_timestamp,
-                    "title": a.find("h2", class_="post-title").text,
-                    "link": link,
-                    "publication": self.publication,
-                }
-
-                # Adds dict attribute for article text then appends to article_list
-                try:
-                    article["full_text"] = self.get_article_text(article["link"])
-                except ScrapingError as e:
-                    print(f"Scraping error: {e}")
-                    scrape_result.success = False
-                    scrape_result.error_message = str(e)
-                    return scrape_result
-
-                # Send console message
-                self.entry_added_message(count=count, page_num=page_num)
-                count += 1
-                scrape_result.article_list.append(article)
-
-            # Checks if stop timestamp reached.
-            if not self.should_continue_pagination(
-                stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
-            ):
-                return scrape_result
-
-            # Go to next page
-            page_num = page_num + 1
-
-            # Send console message
-            self.next_page_message(count=count, page_num=page_num)
-
-            if page_num > 2:
-                url = "dddddd"
-
-    def get_article_text(self, article_link):
+    def get_article_text_and_last_updated(self, article_link):
         """Gathers article text content from link to given article. Concatenates all
         paragraph elements into single string and returns it."""
 
         # bs4 setup
         soup = self.get_soup(url=article_link)
 
+        # Get last updated date
+        script = soup.find("script", id="tie-schema-json")
+
+        # Load script as json
+        data = json.loads(script.text)
+
+        # Get last updated date
+        last_updated = data["dateCreated"]
+
         # iterates thru paragraphs and concatenates text content
         paragraphs = soup.find("div", class_="entry-content entry clearfix").find_all(
             "p", recursive=False
         )
-        return "\n\n".join(paragraph.text for paragraph in paragraphs)
 
-    def get_timestamp_from_arabic_latin_date_HFL(self, date):
-        """Converts Arabic date in 'dd, m, YYYY' format to unix timestamp"""
+        full_text = "\n\n".join(paragraph.text for paragraph in paragraphs)
 
-        # Get number of Arabic month and replace it in string
-        for month in utils.ARABIC_LATIN_MONTHS:
-            if month in date:
-                translated_date = date.replace(month, utils.ARABIC_LATIN_MONTHS[month])
+        return last_updated, full_text
 
-        # Get unix timestamp from translated date
-        return time.mktime(
-            datetime.datetime.strptime(translated_date, "%d %m، %Y").timetuple()
-        )
+    def get_timestamp(self, date_posted):
+        """Gets the timestamp of an article"""
+
+        return datetime.datetime.strptime(
+            date_posted, "%Y-%m-%dT%H:%M:%S%z"
+        ).timestamp()
