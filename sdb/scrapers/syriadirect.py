@@ -1,87 +1,38 @@
-from sdb.scrapers.base_scraper import BaseScraper
+from sdb.scrapers.base_scraper import BaseScraper, ScraperConfig
 from sdb.scrapers.scrape_result import ScrapeResult
 from sdb.scrapers.scraping_error import ScrapingError
 
 import datetime
 
-# import syriadailybrief.scrapers.utils as utils
-
+SyriaDirect_Config = ScraperConfig(
+    url_template="https://syriadirect.org/%D8%A2%D8%AE%D8%B1-%D8%A7%D9%84%D8%AA%D9%82%D8%A7%D8%B1%D9%8A%D8%B1/page/{page_num}/?lang=ar",
+    publication="Syria Direct",
+    can_get_metadata_from_page=True,
+)
 
 class SyriaDirect(BaseScraper):
     def __init__(self):
-        self.url_template = "https://syriadirect.org/%D8%A2%D8%AE%D8%B1-%D8%A7%D9%84%D8%AA%D9%82%D8%A7%D8%B1%D9%8A%D8%B1/page/{page_num}/?lang=ar"
-        self.publication = "Syria Direct"
+        self.config = SyriaDirect_Config
 
-    def get_news_articles_by_page(self, page_num=1, stop_timestamp=False):
-        """Scrapes a single page of Syria Direct articles until time limit reached"""
+    def find_all_articles(self, soup):
+        """Finds all articles on a single page"""
 
-        # Dataclass scrape result to be returned
-        scrape_result = ScrapeResult()
-        url_template = self.url_template
+        return soup.find("div", class_="fusion-posts-container").find_all("article")
 
-        while True:
-            url = url_template.format(page_num=page_num)
+    def find_article_title(self, article):
+        """Find title of article"""
 
-            try:
-                # bs4 setup
-                soup = self.get_soup(url=url)
-            except ScrapingError as e:
-                print(f"Scraping error: {e}")
-                scrape_result.success = False
-                scrape_result.error_message = str(e)
-                return scrape_result
+        return article.find("h2").find("a").text
 
-            articles = soup.find("div", class_="fusion-posts-container").find_all(
-                "article"
-            )
+    def find_article_link(self, article):
+        """Find link of article"""
 
-            count = 1
+        return article.find("h2").find("a").get("href")
 
-            # Gathers article info for each post on single page
-            for a in articles:
-                date_posted = a.find("span", class_="updated").text
-                current_timestamp = self.get_timestamp(date_posted)
+    def find_article_date_posted(self, article):
+        """Returns the date posted of an article"""
 
-                # Returns result if timestamp reached
-                if self.reached_time_limit_loop(
-                    stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
-                ):
-                    return scrape_result
-
-                title = a.find("h2").find("a").text
-                article = {
-                    "date_posted": current_timestamp,
-                    "title": title,
-                    "publication": self.publication,
-                    "link": a.find("h2").find("a").get("href"),
-                }
-
-                # Send console message
-                self.entry_added_message(count=count, page_num=page_num)
-                count += 1
-
-                # Add dict attribute for article text then append to article_list
-                try:
-                    article["full_text"] = self.get_article_text(article["link"])
-                except ScrapingError as e:
-                    print(f"Scraping error: {e}")
-                    scrape_result.success = False
-                    scrape_result.error_message = str(e)
-                    return scrape_result
-
-                scrape_result.article_list.append(article)
-
-            # Checks if stop timestamp reached.
-            if not self.should_continue_pagination(
-                stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
-            ):
-                return scrape_result
-
-            # Go to next page
-            page_num = page_num + 1
-
-            # Send console message
-            self.next_page_message(count=count, page_num=page_num)
+        return article.find("span", class_="updated").text
 
     def get_article_text(self, article_link):
         """Concatenates all paragraph elements in article into a single string,
@@ -105,10 +56,9 @@ class SyriaDirect(BaseScraper):
 
         return text_content
 
-    def get_timestamp(self, date):
-        """Takes date input and converts it to Unix timestamp.
+    def get_timestamp(self, date_posted):
+        """Gets the timestamp of an article"""
 
-        NOTE: Assumes date is in ISO 8601 format.
-        """
-
-        return int(datetime.datetime.fromisoformat(date).timestamp())
+        return datetime.datetime.strptime(
+            date_posted, "%Y-%m-%dT%H:%M:%S%z"
+        ).timestamp()
