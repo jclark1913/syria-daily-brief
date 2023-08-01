@@ -1,116 +1,56 @@
-from sdb.scrapers.base_scraper import BaseScraper
-import sdb.scrapers.utils as utils
-from sdb.scrapers.scraping_error import ScrapingError
-from sdb.scrapers.scrape_result import ScrapeResult
+from sdb.scrapers.base_scraper import BaseScraper, ScraperConfig
 
-import time
+import datetime
+
+EnabBaladi_Config = ScraperConfig(
+    url_template="https://www.enabbaladi.net/archives/category/online/page/{page_num}",
+    publication="Enab Baladi",
+    can_get_metadata_from_page=False,
+)
 
 
 class EnabBaladi(BaseScraper):
     def __init__(self):
-        self.url_template = (
-            "https://www.enabbaladi.net/archives/category/online/page/{page_num}"
-        )
-        self.publication = "Enab Baladi"
+        self.config = EnabBaladi_Config
 
-    def get_news_articles_by_page(self, page_num=1, stop_timestamp=False):
-        """Scrapes a single page of Enab Beladi articles until time limit reached.
-        TODO: Handle server timeout while looping
+    def find_all_articles(self, soup):
+        """Returns a list of all article elements on page."""
 
-        NOTE: There is a peculiarity with Enab Beladi. The most recent 5-6 articles
-        are "featured", and they don't have dates attached to their parent elements
-        on page 1. I could circumvent this by getting their dates when I get the
-        full text of the article, but for now I will assume that featured articles
-        are from today (Enab Beladi is prolific and publishes 20+ articles each day)
-        """
+        return soup.find_all("div", class_="one-post")
 
-        # Dataclass scrape result to be returned
-        scrape_result = ScrapeResult()
-        url_template = self.url_template
+    def find_article_title(self, article):
+        """Returns article title."""
 
-        while True:
-            # Generate correct url from template
-            url = url_template.format(page_num=page_num)
+        return article.find("div", class_="item-content").find("a").find("h3").text
 
-            # bs4 setup
-            try:
-                soup = self.get_soup(url=url)
-            except ScrapingError as e:
-                print(f"Scraping error: {e}")
-                scrape_result.success = False
-                scrape_result.error_message = str(e)
-                return scrape_result
+    def find_article_link(self, article):
+        """Returns article link."""
 
-            articles = soup.find_all("div", class_="one-post")
+        return article.find("div", class_="item-content").find("a").get("href")
 
-            count = 1
-
-            # Gathers article info for each post on single page
-            for a in articles:
-                content = a.find("div", class_="item-content")
-
-                # The top featured articles do not have a timestamp on the main page, so
-                # we assume that the top 5-6 featured articles are from today.
-                if content.find("samp"):
-                    current_timestamp = utils.get_timestamp_from_arabic_latin_date(
-                        content.find("samp").text
-                    )
-                    date_posted = current_timestamp
-                else:
-                    current_timestamp = int(time.time())
-                    date_posted = current_timestamp
-
-                # Breaks loop if timestamp reached
-                if self.reached_time_limit_loop(
-                    stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
-                ):
-                    return scrape_result
-
-                title = content.find("a").find("h3").text
-
-                # Generates article object w/ date posted using datetime.fromtimestamp
-                article = {
-                    "date_posted": date_posted,
-                    "title": title,
-                    "publication": self.publication,
-                    "link": a.find("a").get("href"),
-                }
-
-                self.entry_added_message(count=count, page_num=page_num)
-                count += 1
-
-                # Adds dict attribute for article text then appends to article_list
-                try:
-                    article["full_text"] = self.get_article_text(article["link"])
-                except ScrapingError as e:
-                    print(f"Scraping error: {e}")
-                    scrape_result.success = False
-                    scrape_result.error_message = str(e)
-                    return scrape_result
-
-                scrape_result.article_list.append(article)
-
-            # Checks if stop timestamp reached.
-            if not self.should_continue_pagination(
-                stop_timestamp=stop_timestamp, current_timestamp=current_timestamp
-            ):
-                return scrape_result
-
-            # Go to next page
-            page_num = page_num + 1
-
-            # Send console message
-            self.next_page_message(count=count, page_num=page_num)
-
-    def get_article_text(self, article_link):
-        """Concatenates all paragraph elements in article into single string and
-        returns it."""
+    def get_article_text_and_last_updated(self, article_link):
+        """Returns full text and last_updated"""
 
         # bs4 setup
         soup = self.get_soup(url=article_link)
+
+        # Gets last updated timestamp from metadata
+        last_updated = soup.find("meta", property="article:published_time").get(
+            "content"
+        )
 
         # Identifies paragraphs and creates empty variable for text content
         paragraphs = soup.find("div", class_="content-article").find_all(
             "p", recursive=False
         )
-        return "\n\n".join(paragraph.text for paragraph in paragraphs)
+
+        # Concatenates all paragraph elements in article into single string
+        full_text = "\n\n".join(paragraph.text for paragraph in paragraphs)
+
+        return last_updated, full_text
+
+    def get_timestamp(self, date_posted):
+        """Returns timestamp from date_posted."""
+        return datetime.datetime.strptime(
+            date_posted, "%Y-%m-%dT%H:%M:%S%z"
+        ).timestamp()
