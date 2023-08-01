@@ -48,6 +48,8 @@ class TranslationTestCase(TestCase):
         db.session.add(self.entry)
         db.session.commit()
 
+    def tearDown(self):
+        db.session.rollback()
 
     def test_initialize_argos_translate(self):
         """Does initialize_argostranslate run without error?"""
