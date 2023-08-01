@@ -38,7 +38,7 @@ class Suwayda24(BaseScraper):
         soup = self.get_soup(url=article_link)
 
         # Get script w/ date object
-        last_updated = soup.find("meta", property="article:modified_time").get(
+        last_updated = soup.find("meta", property="article:published_time").get(
             "content"
         )
 
