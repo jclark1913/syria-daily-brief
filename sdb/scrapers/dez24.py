@@ -1,11 +1,12 @@
 from sdb.scrapers.base_scraper import BaseScraper, ScraperConfig
-import sdb.scrapers.utils as utils
+import datetime
 
 DEZ24_Config = ScraperConfig(
     url_template="https://deirezzor24.net/category/%d8%a3%d8%ae%d8%a8%d8%a7%d8%b1/page/{page_num}/",
     publication="Deir Ezzor 24",
     can_get_metadata_from_page=False,
 )
+
 
 class DEZ24(BaseScraper):
     def __init__(self):
@@ -31,15 +32,12 @@ class DEZ24(BaseScraper):
         link = content.find("a").get("href")
         return link
 
-    # def find_article_date_posted(self, article):
-    #     """Gets the date posted of an article"""
-
-    #     return article.find("span", class_="updated").text
-
     def get_timestamp(self, date_posted):
         """Gets the timestamp of an article"""
 
-        return utils.get_approx_timestamp_from_last_updated_AR(date_posted)
+        return datetime.datetime.strptime(
+            date_posted, "%Y-%m-%dT%H:%M:%S%z"
+        ).timestamp()
 
     def get_article_text_and_last_updated(self, article_link):
         """Gets the text from a single article as well as the description in
@@ -56,6 +54,8 @@ class DEZ24(BaseScraper):
         full_text = "\n\n".join(paragraph.text for paragraph in paragraphs)
 
         # Get last_updated to generate timestamp
-        last_updated = soup.find("span", class_="updated").text
+        last_updated = soup.find("meta", property="article:published_time").get(
+            "content"
+        )
 
         return last_updated, full_text
