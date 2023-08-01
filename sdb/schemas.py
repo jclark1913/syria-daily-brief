@@ -80,3 +80,16 @@ class SummarizeSchema(ma.Schema):
         fields = ["entry_ids"]
 
     entry_ids = fields.List(fields.Integer(), required=True)
+
+class ScrapeSchema(ma.Schema):
+    class Meta:
+        ordered = True
+        fields = (
+            "collection_id",
+            "selected_scrapers",
+            "stop_timestamp",
+        )
+
+    collection_id = fields.Integer(required=True)
+    selected_scrapers = fields.List(fields.String(), required=True)
+    stop_timestamp = fields.Integer(required=True)
