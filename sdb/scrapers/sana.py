@@ -6,7 +6,7 @@ import datetime
 SANA_config = ScraperConfig(
     url_template="https://sana.sy/?cat=29582&paged={page_num}",
     publication="SANA (Syrian Arab News Network)",
-    can_get_metadata_from_page=True,
+    should_get_metadata_during_pagination=True,
 )
 
 
@@ -14,27 +14,27 @@ class SANA(BaseScraper):
     def __init__(self):
         self.config = SANA_config
 
-    def find_all_articles(self, soup):
+    def get_all_articles(self, soup):
         """Finds all articles on a single page and returns them as a list."""
 
         return soup.find_all("article", class_="item-list")
 
-    def find_article_title(self, article):
+    def get_article_title(self, article):
         """Returns the title of an article."""
 
         return article.find("a", class_=None).text
 
-    def find_article_link(self, article):
+    def get_article_link(self, article):
         """Returns the link of an article."""
 
         return article.find("a", class_="more-link").get("href")
 
-    def find_article_date_posted(self, article):
+    def get_article_date_posted(self, article):
         """Returns the date posted of an article."""
 
         return article.find("span", class_="tie-date").text
 
-    def get_article_text(self, article_link):
+    def get_article_full_text(self, article_link):
         """Concatenates all paragraph elements in article into a single string and
         returns it"""
 
@@ -53,3 +53,4 @@ class SANA(BaseScraper):
 
         # Uses time and datetime libs to generate Unix timestamp
         return time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d").timetuple())
+

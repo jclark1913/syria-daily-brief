@@ -1,22 +1,20 @@
+from abc import ABC, abstractmethod
+from bs4 import BeautifulSoup
+from collections import namedtuple
+import datetime
 import requests
 
-from abc import ABC, abstractmethod
-
-from bs4 import BeautifulSoup
-
+from sdb.scrapers.scraping_error import ScrapingError
+from sdb.scrapers.scrape_result import ScrapeResult
 from sdb.scrapers.utils import DEFAULT_HEADERS
 
-from sdb.scrapers.scrape_result import ScrapeResult
-from sdb.scrapers.scraping_error import ScrapingError
-
-from collections import namedtuple
 
 ScraperConfig = namedtuple(
     "ScraperConfig",
     [
         "url_template",
         "publication",
-        "can_get_metadata_from_page",
+        "should_get_metadata_during_pagination",
     ],
 )
 
@@ -50,6 +48,7 @@ class BaseScraper(ABC):
         # NOTE: This will raise a scraping error BUT it will retain the original
         # exception in the __cause__ atribute of the ScrapingError object. The
         # "from e" is a neat little trick to ease debugging a bit.
+
         try:
             response = requests.get(url, headers=DEFAULT_HEADERS, timeout=10)
         except Exception as e:
@@ -63,6 +62,7 @@ class BaseScraper(ABC):
         """Placeholder method overidden in subclasses where articles are gathered
         through pagination.
         """
+
         # Dataclass scrape result to be returned
         scrape_result = ScrapeResult()
         url_template = self.config.url_template
@@ -81,26 +81,26 @@ class BaseScraper(ABC):
                 return scrape_result
 
             # Gets all articles on page
-            articles = self.find_all_articles(soup)
+            articles = self.get_all_articles(soup)
 
             count = 1
 
             # Gathers article info for each post on single page
             for a in articles:
                 # Gets article title
-                title = self.find_article_title(a)
-                link = self.find_article_link(a)
+                title = self.get_article_title(a)
+                link = self.get_article_link(a)
 
-                if self.config.can_get_metadata_from_page:
-                    date_posted = self.find_article_date_posted(a)
+                if self.config.should_get_metadata_during_pagination:
+                    date_posted = self.get_article_date_posted(a)
                     current_timestamp = self.get_timestamp(date_posted)
-                    full_text = self.get_article_text(link)
+                    full_text = self.get_article_full_text(link)
                 else:
-                    [last_updated, full_text] = self.get_article_text_and_last_updated(
+                    [date_posted, full_text] = self.get_full_text_and_date_posted(
                         link
                     )
-                    print("LAST UPDATED: ", last_updated)
-                    current_timestamp = self.get_timestamp(last_updated)
+                    print("LAST UPDATED: ", date_posted)
+                    current_timestamp = self.get_timestamp(date_posted)
 
                 # Breaks loop if timestamp reached
                 if self.reached_time_limit_loop(
@@ -143,39 +143,38 @@ class BaseScraper(ABC):
             # Send console message
             self.next_page_message(count=count, page_num=page_num)
 
-    # NOTE: These abstract methods are all overridden in subclasses.
+    # NOTE: These methods are all overridden in subclasses.
 
-    @abstractmethod
-    def find_all_articles(self, soup):
+    def get_all_articles(self, soup):
         """Returns all articles on a page."""
         pass
 
-    @abstractmethod
-    def find_article_title(self, article):
+    def get_article_title(self, article):
         """Returns the title of an article."""
         pass
 
-    @abstractmethod
-    def find_article_link(self, article):
+    def get_article_link(self, article):
         """Returns the link of an article."""
         pass
 
-    @abstractmethod
-    def find_article_date_posted(self, article):
+    def get_article_date_posted(self, article):
         """Returns the date an article was posted."""
         pass
 
-    @abstractmethod
     def get_timestamp(self, date_posted):
-        """Returns a timestamp from a date posted."""
-        pass
+        """Returns a timestamp from an ISO date. This may be overridden in
+        subclasses
+        """
+        print("BC GET TIMESTAMP")
+        return datetime.datetime.strptime(
+            date_posted, "%Y-%m-%dT%H:%M:%S%z"
+        ).timestamp()
 
-    # NOTE: These methods are overridden in subclasses but are not abstract.
-    def get_article_text_and_last_updated(self, article):
+    def get_full_text_and_date_posted(self, article):
         """Returns text and last updated simultaneously"""
         pass
 
-    def get_article_text(self, article_link):
+    def get_article_full_text(self, article_link):
         """Returns the text of an article."""
         pass
 
@@ -213,7 +212,7 @@ class BaseScraper(ABC):
         scraping.
         """
 
-        if stop_timestamp and current_timestamp >= stop_timestamp:
+        if stop_timestamp and current_timestamp > stop_timestamp:
             return True
 
         return False
