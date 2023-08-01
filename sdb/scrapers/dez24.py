@@ -1,7 +1,5 @@
 from sdb.scrapers.base_scraper import BaseScraper, ScraperConfig
 import sdb.scrapers.utils as utils
-from sdb.scrapers.scrape_result import ScrapeResult
-from sdb.scrapers.scraping_error import ScrapingError
 
 DEZ24_Config = ScraperConfig(
     url_template="https://deirezzor24.net/category/%d8%a3%d8%ae%d8%a8%d8%a7%d8%b1/page/{page_num}/",
@@ -33,10 +31,10 @@ class DEZ24(BaseScraper):
         link = content.find("a").get("href")
         return link
 
-    def find_article_date_posted(self, article):
-        """Gets the date posted of an article"""
+    # def find_article_date_posted(self, article):
+    #     """Gets the date posted of an article"""
 
-        return article.find("span", class_="updated").text
+    #     return article.find("span", class_="updated").text
 
     def get_timestamp(self, date_posted):
         """Gets the timestamp of an article"""
