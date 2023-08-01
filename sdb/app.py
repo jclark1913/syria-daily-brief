@@ -20,6 +20,7 @@ from sdb.schemas import (
     MigrateSchema,
     PrintSchema,
     TranslateSchema,
+    ScrapeSchema
 )
 import sdb.translation as translation
 
@@ -407,9 +408,12 @@ def generate_excel():
 def scrape_data():
     """Scrapes data from selected websites and saves it to the database"""
 
-    # TODO: Add schema validation
-
+    # Gets JSON from request
     data = request.get_json()
+
+    # Validate JSON schema
+    scrape_schema = ScrapeSchema()
+    scrape_schema.load(data)
 
     # Gets parameters from request
     scraper_strings = data["selected_scrapers"]
@@ -420,7 +424,7 @@ def scrape_data():
     try:
         selected_scrapers = [ScraperMap[scraper_str] for scraper_str in scraper_strings]
     except KeyError as e:
-        raise Exception(f"Scraper {e} not found")
+        raise Exception(f"Scraper {e} not found.")
 
     # Activates scrapers
     try:
@@ -432,7 +436,7 @@ def scrape_data():
     except Exception as e:
         return jsonify(error=str(e)), 400
 
-    return jsonify({"message": "Scraping complete"}), 200
+    return jsonify({"message": "Scraping complete."}), 200
 
 
 # Error handlers
@@ -454,4 +458,4 @@ def handle_marshmallow_validation(err):
 def global_error_handler(e):
     """Global error handler"""
 
-    return jsonify(error=str(e)), 500
+    return jsonify(error=str(e)), 400
