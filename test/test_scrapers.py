@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 from sdb.scrapers.scraping_error import ScrapingError
 from sdb.scrapers.scrape_result import ScrapeResult
+from sdb.scrapers.base_scraper import ScraperConfig
 
 from sdb.scrapers import (
     base_scraper,
@@ -70,14 +71,23 @@ class BaseScraperTestCase(TestCase):
             )
         )
 
-        """Should return True if current_timestamp is equal to stop_timestamp"""
-        self.assertTrue(test_scraper.should_continue_pagination(1, 1))
-
         """Should return false if current_timestamp is less than stop_timestamp"""
         self.assertFalse(test_scraper.should_continue_pagination(1000, 1))
 
         """Shoulre return False if stop_timestamp is not passed into method"""
-        self.assertFalse(test_scraper.should_continue_pagination(current_timestamp=1000))
+        self.assertFalse(
+            test_scraper.should_continue_pagination(current_timestamp=1000)
+        )
+
+    def test_get_timestamp(self):
+        """Does get_timestamp convert ISO to unix timestamp?"""
+
+        test_scraper = dez24.DEZ24()
+
+        """Should return correct unix timestamp"""
+        self.assertEqual(
+            test_scraper.get_timestamp("2023-07-23T13:03:36+00:00"), 1690117416
+        )
 
 
 class DEZ24TestCase(TestCase):
@@ -92,13 +102,14 @@ class DEZ24TestCase(TestCase):
         pass
 
     def test_properties(self):
-        """Does DEZ24 have correct url_template and publication properties?"""
+        """Does DEZ24 have correct config properties?"""
 
         self.assertEqual(
-            self.dez24.url_template,
+            self.dez24.config.url_template,
             "https://deirezzor24.net/category/%d8%a3%d8%ae%d8%a8%d8%a7%d8%b1/page/{page_num}/",
         )
-        self.assertEqual(self.dez24.publication, "Deir Ezzor 24")
+        self.assertEqual(self.dez24.config.publication, "Deir Ezzor 24")
+        self.assertEqual(self.dez24.config.should_get_metadata_during_pagination, False)
 
     def test_get_soup(self):
         """Does DEZ24.get_soup return a BeautifulSoup object?"""
@@ -120,18 +131,19 @@ class DEZ24TestCase(TestCase):
         self.assertTrue(scrape_result.success)
         self.assertEqual(len(scrape_result.article_list), 10)
 
-    def test_get_article_text_and_last_updated(self):
-        """Does get_article_text_and_last_updated return correct data?"""
+    def test_get_full_text_and_date_posted(self):
+        """Does get_full_text_and_date_posted return correct data?"""
 
-        article = self.dez24.get_article_text_and_last_updated(
+        [date_posted, full_text] = self.dez24.get_full_text_and_date_posted(
             "https://deirezzor24.net/%d8%b9%d9%86%d8%a7%d8%b5%d8%b1-%d8%a7%d9%84%d9%81%d9%8a%d9%84%d9%82-%d8%a7%d9%84%d8%ae%d8%a7%d9%85%d8%b3-%d8%a8%d8%af%d9%8a%d8%b1%d8%a7%d9%84%d8%b2%d9%88%d8%b1-%d9%8a%d9%87%d8%af%d8%af%d9%88%d9%86/"
         )
-        self.assertTrue(
-            type(article["article_text"]) == str and len(article["article_text"]) > 0
-        )
-        self.assertTrue(
-            type(article["last_updated"]) == str and len(article["last_updated"]) > 0
-        )
+
+        """Does get_full_text_and_date_posted return correct date_posted?"""
+        self.assertEqual(date_posted, "2023-07-23T18:19:32+00:00")
+
+        """Does get_full_text_and_date_posted return correct full_text?"""
+        self.assertTrue(type(full_text) is str)
+        self.assertTrue(len(full_text) > 0)
 
 
 class EnabBaladiTestCase(TestCase):
@@ -149,10 +161,13 @@ class EnabBaladiTestCase(TestCase):
         """Does EnabBaladi have correct url_template and publication properties?"""
 
         self.assertEqual(
-            self.enabbaladi.url_template,
+            self.enabbaladi.config.url_template,
             "https://www.enabbaladi.net/archives/category/online/page/{page_num}",
         )
-        self.assertEqual(self.enabbaladi.publication, "Enab Baladi")
+        self.assertEqual(self.enabbaladi.config.publication, "Enab Baladi")
+        self.assertEqual(
+            self.enabbaladi.config.should_get_metadata_during_pagination, False
+        )
 
     def test_get_soup(self):
         """Does EnabBaladi.get_soup return a BeautifulSoup object?"""
@@ -174,13 +189,18 @@ class EnabBaladiTestCase(TestCase):
         self.assertTrue(scrape_result.success)
         self.assertTrue(len(scrape_result.article_list) > 1)
 
-    def test_get_article_text(self):
-        """Does get_article_text return correct data"""
+    def test_get_full_text_and_date_posted(self):
+        """Does get_full_text_and_date_posted return correct data"""
 
-        article_text = self.enabbaladi.get_article_text(
+        [date_posted, full_text] = self.enabbaladi.get_full_text_and_date_posted(
             "https://www.enabbaladi.net/archives/651728"
         )
-        self.assertTrue(type(article_text) == str and len(article_text) > 0)
+
+        """Does get_full_text_and_date_posted return correct date_posted?"""
+        self.assertEqual(date_posted, "2023-07-23T13:03:36+00:00")
+
+        """Does get_full_text_and_date_posted return correct full_text?"""
+        self.assertTrue(type(full_text) == str and len(full_text) > 0)
 
 
 class HouranFLTestCase(TestCase):
@@ -198,10 +218,13 @@ class HouranFLTestCase(TestCase):
         """Does HouranFL have correct url_template and publication properties?"""
 
         self.assertEqual(
-            self.houranfl.url_template,
+            self.houranfl.config.url_template,
             "https://www.horanfree.com/page/{page_num}?cat=%2A",
         )
-        self.assertEqual(self.houranfl.publication, "Houran Free League")
+        self.assertEqual(self.houranfl.config.publication, "Houran Free League")
+        self.assertEqual(
+            self.houranfl.config.should_get_metadata_during_pagination, False
+        )
 
     def test_get_soup(self):
         """Does HouranFL.get_soup return a BeautifulSoup object?"""
@@ -221,24 +244,18 @@ class HouranFLTestCase(TestCase):
         self.assertTrue(scrape_result.success)
         self.assertTrue(len(scrape_result.article_list) > 1)
 
-    def test_get_article_text(self):
-        """Does get-article_text return the article's text"""
+    def test_get_full_text_and_date_posted(self):
+        """Does get_full_text_and_date_posted return the article's text"""
 
-        article_text = self.houranfl.get_article_text(
+        [date_posted, full_text] = self.houranfl.get_full_text_and_date_posted(
             "https://www.horanfree.com/archives/13818"
         )
 
-        self.assertTrue(type(article_text) == str and len(article_text) > 0)
+        """Does it return correct date_posted?"""
+        self.assertEqual(date_posted, "2023-07-19T15:33:21+03:00")
 
-    def test_get_timestamp_from_arabic_latin_date_HFL(self):
-        """Does get_timestamp_from_arabic_latin_date_HFL return correct timestamp?"""
-
-        timestamp = self.houranfl.get_timestamp_from_arabic_latin_date_HFL(
-            "23 يوليو، 2023"
-        )
-
-        self.assertTrue(type(timestamp), int)
-        self.assertTrue(timestamp == 1690084800)
+        """Does it return correct full_text?"""
+        self.assertTrue(type(full_text) == str and len(full_text) > 0)
 
 
 class SANATestCase(TestCase):
@@ -256,10 +273,13 @@ class SANATestCase(TestCase):
         """Does SANA have correct url_template and publication properties?"""
 
         self.assertEqual(
-            self.SANA.url_template,
+            self.SANA.config.url_template,
             "https://sana.sy/?cat=29582&paged={page_num}",
         )
-        self.assertEqual(self.SANA.publication, "SANA (Syrian Arab News Network)")
+        self.assertEqual(
+            self.SANA.config.publication, "SANA (Syrian Arab News Network)"
+        )
+        self.assertEqual(self.SANA.config.should_get_metadata_during_pagination, True)
 
     def test_get_soup(self):
         """Does SANA.get_soup return a BeautifulSoup object?"""
@@ -279,17 +299,17 @@ class SANATestCase(TestCase):
         self.assertTrue(scrape_result.success)
         self.assertTrue(len(scrape_result.article_list) > 1)
 
-    def test_get_article_text(self):
-        """Does get_article_text return the article's text"""
+    def test_get_article_full_text(self):
+        """Does get_article_full_text return the article's text"""
 
-        article_text = self.SANA.get_article_text("https://sana.sy/?p=1937484")
+        article_text = self.SANA.get_article_full_text("https://sana.sy/?p=1937484")
 
         self.assertTrue(type(article_text) == str and len(article_text) > 0)
 
-    def test_get_timestamp_SANA(self):
+    def test_get_timestamp(self):
         """Does get_timestamp return correct unix timestamp"""
 
-        timestamp = self.SANA.get_timestamp_SANA("2023-07-24")
+        timestamp = self.SANA.get_timestamp("2023-07-24")
 
         self.assertTrue(type(timestamp), int)
         self.assertTrue(timestamp == 1690171200)
@@ -315,11 +335,15 @@ class Suwayda24TestCase(TestCase):
         """Does Suwayda24 have correct url_template and publication properties?"""
 
         self.assertEqual(
-            self.suwayda24.url_template,
+            self.suwayda24.config.url_template,
             "https://suwayda24.com/?cat=%2A&paged={page_num}",
         )
 
-        self.assertEqual(self.suwayda24.publication, "Suwayda 24")
+        self.assertEqual(self.suwayda24.config.publication, "Suwayda 24")
+
+        self.assertEqual(
+            self.suwayda24.config.should_get_metadata_during_pagination, False
+        )
 
     def test_get_soup(self):
         """Does Suwayda24.get_soup return a BeautifulSoup object?"""
@@ -339,20 +363,18 @@ class Suwayda24TestCase(TestCase):
         self.assertTrue(scrape_result.success)
         self.assertTrue(len(scrape_result.article_list) > 1)
 
-    def test_get_article_text(self):
-        """Does get_article_text return the article's text"""
+    def test_get_full_text_and_date_posted(self):
+        """Does get_full_text_and_date_posted return the article's text"""
 
-        article_text = self.suwayda24.get_article_text("https://suwayda24.com/?p=21571")
+        [date_posted, full_text] = self.suwayda24.get_full_text_and_date_posted(
+            "https://suwayda24.com/?p=21571"
+        )
 
-        self.assertTrue(type(article_text) == str and len(article_text) > 0)
+        """Does it return correct date_posted"""
+        self.assertEqual(date_posted, "2023-07-21T14:52:25+03:00")
 
-    def test_get_s24_eng_timestamp(self):
-        """Does get_s24_eng_timestamp return correct unix timestamp"""
-
-        timestamp = self.suwayda24.get_s24_eng_timestamp("07/24/2023")
-
-        self.assertTrue(type(timestamp), int)
-        self.assertTrue(timestamp == 1690171200)
+        """Does it return correct full_text?"""
+        self.assertTrue(type(full_text) == str and len(full_text) > 0)
 
 
 class SyriaDirectTestCase(TestCase):
@@ -370,10 +392,13 @@ class SyriaDirectTestCase(TestCase):
         """Does SyriaDirect have correct url_template and publication properties?"""
 
         self.assertEqual(
-            self.syriadirect.url_template,
+            self.syriadirect.config.url_template,
             "https://syriadirect.org/%D8%A2%D8%AE%D8%B1-%D8%A7%D9%84%D8%AA%D9%82%D8%A7%D8%B1%D9%8A%D8%B1/page/{page_num}/?lang=ar",
         )
-        self.assertEqual(self.syriadirect.publication, "Syria Direct")
+        self.assertEqual(self.syriadirect.config.publication, "Syria Direct")
+        self.assertEqual(
+            self.syriadirect.config.should_get_metadata_during_pagination, True
+        )
 
     def test_get_soup(self):
         """Does SyriaDirect.get_soup return a BeautifulSoup object?"""
@@ -395,18 +420,11 @@ class SyriaDirectTestCase(TestCase):
         self.assertTrue(scrape_result.success)
         self.assertTrue(len(scrape_result.article_list) > 1)
 
-    def test_get_article_text(self):
-        """Does get_article_text return text from article?"""
+    def test_get_article_full_text(self):
+        """Does get_article_full_text return text from article?"""
 
-        article_text = self.syriadirect.get_article_text(
+        article_text = self.syriadirect.get_article_full_text(
             "https://syriadirect.org/%d8%a8%d8%b0%d8%b1%d9%8a%d8%b9%d8%a9-%d8%a7%d9%84%d8%ad%d9%81%d8%a7%d8%b8-%d8%b9%d9%84%d9%89-%d8%a7%d9%84%d8%aa%d8%b1%d8%a7%d8%ab-%d8%b9%d9%85%d9%84%d9%8a%d8%a7%d8%aa-%d8%aa%d8%b1%d9%85%d9%8a%d9%85/?lang=ar"
         )
 
         self.assertTrue(type(article_text) == str and len(article_text) > 0)
-
-    def test_get_timestamp(self):
-        """Does get_timestamp return proper timestamp?"""
-
-        timestamp = self.syriadirect.get_timestamp("2023-07-24T18:37:07.605")
-
-        self.assertTrue(timestamp == 1690238227)
