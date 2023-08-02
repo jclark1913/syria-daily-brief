@@ -145,14 +145,17 @@ class BaseScraper(ABC):
 
     # NOTE: These methods are all overridden in subclasses.
 
+    @abstractmethod
     def get_all_articles(self, soup):
         """Returns all articles on a page."""
         pass
 
+    @abstractmethod
     def get_article_title(self, article):
         """Returns the title of an article."""
         pass
 
+    @abstractmethod
     def get_article_link(self, article):
         """Returns the link of an article."""
         pass
