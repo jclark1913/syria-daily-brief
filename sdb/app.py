@@ -152,20 +152,20 @@ def delete_collection(collection_id):
     return jsonify({"message": "Deleted collection"})
 
 
-@app.get("/api/collections/<int:collection_id>/entries")
-def get_entries_from_collection(collection_id):
-    """Returns all entries from a given collection
+# @app.get("/api/collections/<int:collection_id>/entries")
+# def get_entries_from_collection(collection_id):
+#     """Returns all entries from a given collection
 
-    Returns: {'collection_name': {entry, entry, ...}}
-    """
+#     Returns: {'collection_name': {entry, entry, ...}}
+#     """
 
-    curr_coll = Collection.query.get_or_404(collection_id)
-    entries = curr_coll.entries
-    entry_schema = EntrySchema(many=True)
+#     curr_coll = Collection.query.get_or_404(collection_id)
+#     entries = curr_coll.entries
+#     entry_schema = EntrySchema(many=True)
 
-    result = entry_schema.dump(entries)
+#     result = entry_schema.dump(entries)
 
-    return jsonify({curr_coll.name: result})
+#     return jsonify({curr_coll.name: result})
 
 
 ############# ENTRIES
