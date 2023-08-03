@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from marshmallow import ValidationError
 
@@ -31,6 +32,9 @@ load_dotenv()
 
 app = Flask(__name__)
 ma = Marshmallow(app)
+
+# NOTE: Temporary fix while in development
+CORS(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = False
