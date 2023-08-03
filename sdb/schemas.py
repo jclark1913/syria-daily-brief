@@ -7,12 +7,14 @@ ma = Marshmallow()
 class CollectionSchema(ma.Schema):
     class Meta:
         ordered = True
-        fields = ("id", "name", "description", "created_at")
+        fields = ("id", "name", "description", "created_at", "entries")
 
     id = fields.Integer(dump_only=True)
     name = fields.String(required=True)
     description = fields.String(required=False)
     created_at = fields.Integer(dump_only=True)
+    entries: fields.Nested = fields.Nested("EntrySchema", many=True, dump_only=True)
+
 
 
 class EntrySchema(ma.Schema):
