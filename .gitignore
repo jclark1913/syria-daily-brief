@@ -1,0 +1,11 @@
+# Venv
+/venv
+
+# Environment variables
+.env
+
+# Excel files
+/excels
+
+# Test coverage
+.coverage
