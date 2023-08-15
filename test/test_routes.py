@@ -175,17 +175,20 @@ class APICollectionsRoutesTestCase(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_get_entries_from_collection(self):
-        """Does GET /api/collections/<collection_id>/entries return a list of entries?"""
+        """Does GET /api/collections/<collection_id> return a list of entries
+        nested in the JSON?"""
 
-        response = self.client.get(f"/api/collections/{self.collection_id}/entries")
+        response = self.client.get(f"/api/collections/{self.collection_id}")
         data = response.json
+
+        print("HERE'S DATA ", data)
 
         """Should return 200 status code"""
         self.assertEqual(response.status_code, 200)
 
         """Should return a list of entries w/ correct data"""
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data["Test Collection"][0]["title"], "Test Entry")
+        self.assertEqual(len(data["entries"]), 1)
+        self.assertEqual(data["entries"][0]["title"], "Test Entry")
 
 
 class APIEntriesRoutesTestCase(TestCase):
