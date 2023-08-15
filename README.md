@@ -1,6 +1,5 @@
 
 # Syria Daily Brief
-------------------------------
 
 SDB is a web scraper designed to gather posts, articles and press announcements from a variety of Arabic-language sources run by governments, non-state actors and independent press. This project is designed to complement the work of Syria-focused analysts, particularly those who deal with large quantities of open-source data.
 
@@ -17,18 +16,15 @@ You can read more about the project [here](#about), or you can find a quickstart
 This project is in active development and updated regularly with new features and improvements.
 
 ## About
-------------------------------
 
 
 ### Why?
-------------------------------
 
 Tracking news and press releases is time-consuming, particularly when dealing with press releases and propaganda from the regime and non-state actors. As a former analyst and perennial Syria-watcher, I want to build tools that ease this process - to streamline the gathering, translating and curating of data so more time can be spent analyzing trends and sentiments rather than monitoring social media feeds.
 
 The app features a backend API written in Flask/python and a frontend UI build in React/Javascript/TailwindCSS.
 
 ### Core Features & Roadmap
-------------------------------
 
 - Collect data from a spectrum of Arabic-language websites
 	[x] Choose how far back you'd like to gather data and from which sources (Last 24 hrs, last week, last 6 months, etc)
@@ -49,11 +45,9 @@ The app features a backend API written in Flask/python and a frontend UI build i
 
 
 ### Contact
-------------------------------
 
 To report issues, suggest a feature, request to be a contributor or ask about the project please contact me at jclarksummit@gmail.com.
 
 ## Quickstart
-------------------------------
 
 This project is currently in active development and there is no stable release. Check back soon!
