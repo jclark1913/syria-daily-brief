@@ -48,7 +48,7 @@ def run_selected_scrapers(selections, stop_timestamp, collection_id):
     # Iterate through selections and run each scraper individually
     for scraper in selections:
         scraper = scraper.value()
-        print(f"Gathering data from {scraper.publication}")
+        print(f"Gathering data from {scraper.config.publication}")
         data = scraper.get_data(stop_timestamp=stop_timestamp)
         entries += data.article_list
 
