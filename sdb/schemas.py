@@ -1,5 +1,5 @@
 from flask_marshmallow import Marshmallow
-from marshmallow import fields
+from marshmallow import fields, validate
 
 ma = Marshmallow()
 
@@ -10,7 +10,7 @@ class CollectionSchema(ma.Schema):
         fields = ("id", "name", "description", "created_at", "entries")
 
     id = fields.Integer(dump_only=True)
-    name = fields.String(required=True)
+    name = fields.String(required=True, validate=validate.Length(min=1, max=100))
     description = fields.String(required=False)
     created_at = fields.Integer(dump_only=True)
     entries: fields.Nested = fields.Nested("EntrySchema", many=True, dump_only=True)
