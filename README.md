@@ -26,18 +26,22 @@ The app features a backend API written in Flask/python and a frontend UI build i
 
 ### Core Features & Roadmap
 
-- Collect data from a spectrum of Arabic-language websites:
+Collect data from a spectrum of Arabic-language websites:
+
 -	[x] Choose how far back you'd like to gather data and from which sources (Last 24 hrs, last week, last 6 months, etc)
 -	[x] Gather data from a single source based on parameters you provide or cast a wide net to all available sources.
 -	[ ] Scrape data from more than a dozen Syria-focused websites
-- Manage collected data:
+
+Manage collected data:
 -	[x] Explore collected data through responsive UI
 -	[ ] Search, tag and filter entries depending on your content
 -	[x] Export data to .csv, .xlsx formats
-- Machine translations and summaries:
+
+Machine translations and summaries:
 -	[x] Get English-language summaries from the OpenAI API
 -	[x] Get quick machine translations from the ArgosTranslate API
-- Use responsive UI to edit, view and manage data:
+
+Use responsive UI to edit, view and manage data:
 -	[x] Save scraped data to personalized collections
 -	[x] View entries in sortable, editable database
 -	[ ] Search data and tag entries of interest
