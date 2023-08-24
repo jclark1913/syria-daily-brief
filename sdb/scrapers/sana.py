@@ -5,7 +5,7 @@ import datetime
 
 SANA_config = ScraperConfig(
     url_template="https://sana.sy/?cat=29582&paged={page_num}",
-    publication="SANA (Syrian Arab News Network)",
+    publication="SANA (Syrian Arab News Agency)",
     should_get_metadata_during_pagination=True,
 )
 
