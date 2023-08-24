@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -10,7 +11,11 @@ from sdb.controller import (
     add_entries_to_db,
     ScraperMap,
     generate_excel_from_collection,
+    get_available_scrapers,
 )
+
+from sdb.scrapers import dez24, sana
+
 from sdb.models import db, Collection, Entry
 from sdb.scrapers.scrape_result import ScrapeResult
 
@@ -185,6 +190,26 @@ class ControllerTestCase(TestCase):
 
         """Should add no entries to db"""
         self.assertEqual(len(Entry.query.all()), 1)
+
+
+    def test_get_available_scrapers(self):
+        """Does get_available_scrapers return correct scrapers?"""
+
+        class test_map(Enum):
+            SANA = sana.SANA
+            DEZ24 = dez24.DEZ24
+
+        scraper_list = get_available_scrapers(map=test_map)
+
+        """Should return correct number of scrapers"""
+        self.assertEqual(len(scraper_list), 2)
+
+        """Should return correct scraper names"""
+        self.assertEqual(scraper_list[0], {"SANA": "SANA (Syrian Arab News Agency)"})
+        self.assertEqual(scraper_list[1], {"DEZ24": "Deir Ezzor 24"})
+
+
+
 
     # TODO: Test generate_excel_from_collection (possibly with Pandas snapshot test)
     # def test_generate_excel_from_collection(self):
