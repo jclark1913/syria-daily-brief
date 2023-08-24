@@ -28,13 +28,16 @@ def get_available_scrapers(map=ScraperMap):
     """Returns a list of dictionaries for each available scraper.
 
     Returns:
-        [ENUMNAME: "Publication_name", ...]
+        [
+            {value: ENUMNAME, label: "publication_name"}, ...
+        ]
     """
 
     scraper_list = []
 
     for scraper in map:
-        scraper_list.append({scraper.name: scraper.value().config.publication})
+        scraper_list.append({"value": scraper.name, "label": scraper.value().config.publication})
+        # scraper_list.append({scraper.name: scraper.value().config.publication})
 
     return scraper_list
 
