@@ -277,7 +277,7 @@ class SANATestCase(TestCase):
             "https://sana.sy/?cat=29582&paged={page_num}",
         )
         self.assertEqual(
-            self.SANA.config.publication, "SANA (Syrian Arab News Network)"
+            self.SANA.config.publication, "SANA (Syrian Arab News Agency)"
         )
         self.assertEqual(self.SANA.config.should_get_metadata_during_pagination, True)
 
