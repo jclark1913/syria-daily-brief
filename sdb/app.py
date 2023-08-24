@@ -9,6 +9,7 @@ from marshmallow import ValidationError
 import sdb.ai_utils as ai_utils
 from sdb.controller import (
     generate_excel_from_collection,
+    get_available_scrapers,
     ScraperMap,
     run_selected_scrapers,
     add_entries_to_db,
@@ -441,6 +442,14 @@ def scrape_data():
         return jsonify(error=str(e)), 400
 
     return jsonify({"message": "Scraping complete."}), 200
+
+@app.get("/api/scrape")
+def get_scrapers():
+    """Returns JSON containing names of available scrapers"""
+
+    available_scrapers = get_available_scrapers()
+
+    return jsonify(available_scrapers)
 
 
 # Error handlers
