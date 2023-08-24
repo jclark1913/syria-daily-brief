@@ -23,6 +23,7 @@ class ScraperMap(Enum):
     SUWAYDA24 = suwayda24.Suwayda24
     SYRIADIRECT = syriadirect.SyriaDirect
 
+
 def get_available_scrapers(map=ScraperMap):
     """Returns a list of dictionaries for each available scraper.
 
@@ -36,6 +37,7 @@ def get_available_scrapers(map=ScraperMap):
         scraper_list.append({scraper.name: scraper.value().config.publication})
 
     return scraper_list
+
 
 def run_selected_scrapers(selections, stop_timestamp, collection_id):
     """Controller function that takes an array of values corresponding to websites
