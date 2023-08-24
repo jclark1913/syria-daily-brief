@@ -205,8 +205,8 @@ class ControllerTestCase(TestCase):
         self.assertEqual(len(scraper_list), 2)
 
         """Should return correct scraper names"""
-        self.assertEqual(scraper_list[0], {"SANA": "SANA (Syrian Arab News Agency)"})
-        self.assertEqual(scraper_list[1], {"DEZ24": "Deir Ezzor 24"})
+        self.assertEqual(scraper_list[0], {"value": "SANA", "label": "SANA (Syrian Arab News Agency)"})
+        self.assertEqual(scraper_list[1], {"value": "DEZ24", "label": "Deir Ezzor 24"})
 
 
 
