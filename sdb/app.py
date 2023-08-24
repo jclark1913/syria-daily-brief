@@ -22,7 +22,7 @@ from sdb.schemas import (
     MigrateSchema,
     PrintSchema,
     TranslateSchema,
-    ScrapeSchema
+    ScrapeSchema,
 )
 import sdb.translation as translation
 
@@ -272,7 +272,9 @@ def migrate_entries():
 
     # Delete original entries if delete_on_move is True
     if delete_on_move:
-        delete_message = f" {len(entries_original)} entries deleted from {origin_collection.name}."
+        delete_message = (
+            f" {len(entries_original)} entries deleted from {origin_collection.name}."
+        )
         for entry in entries_original:
             db.session.delete(entry)
         db.session.commit()
@@ -317,9 +319,7 @@ def translate_entries():
     translation.initialize_argostranslate()
 
     for e in entries:
-        [en_title, en_full_text] = translation.get_translated_entry_title_and_text(
-            e
-        )
+        [en_title, en_full_text] = translation.get_translated_entry_title_and_text(e)
         e.title_translated = en_title
         e.full_text_translated = en_full_text
 
@@ -443,9 +443,14 @@ def scrape_data():
 
     return jsonify({"message": "Scraping complete."}), 200
 
+
 @app.get("/api/scrape")
 def get_scrapers():
-    """Returns JSON containing names of available scrapers"""
+    """Returns JSON containing names of available scrapers.
+
+    Returns:
+        {[{value: ENUMNAME, label: "publication_name"}, ...]}
+    """
 
     available_scrapers = get_available_scrapers()
 
