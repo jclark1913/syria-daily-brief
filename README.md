@@ -31,7 +31,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/jclark1913/syria-daily-brief">
-    <img src="docs/images/saved_collections.png" alt="Logo" width="80" height="80">
+    <img src="docs/images/saved_collections.png" width="500">
   </a>
 
 <h3 align="center">Syria Daily Brief</h3>
@@ -83,7 +83,10 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+<div align="center">
+<img src="docs/images/entry_detail.png" width="500">
+<img src="docs/images/entries_list.png" width="500">
+</div>
 
 Tracking news and press releases is time-consuming, particularly when dealing with press releases and propaganda from the regime and non-state actors. As an analyst and perennial Syria-watcher, I want to build tools that ease this process - to streamline the gathering, translating and curating of data so more time can be spent analyzing trends and sentiments rather than monitoring social media feeds. Enter this project.
 
@@ -253,7 +256,9 @@ Project Link: [https://github.com/jclark1913/syria-daily-brief](https://github.c
 [license-url]: https://github.com/jclark1913/syria-daily-brief/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/justin-w-clark
-[product-screenshot]: docs/images/entry_detail.png
+[product-screenshot]: docs/images/saved_collections.png
+[product-screenshot2]: docs/images/entries_list.png
+[product-screenshot3]: docs/images/entry_detail.png
 [React]: https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
 [React-url]: https://reactjs.org/
