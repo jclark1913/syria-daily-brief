@@ -30,9 +30,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/jclark1913/syria-daily-brief">
     <img src="docs/images/saved_collections.png" width="500">
-  </a>
 
 <h3 align="center">Syria Daily Brief</h3>
 
