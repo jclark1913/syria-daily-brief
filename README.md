@@ -31,7 +31,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/jclark1913/syria-daily-brief">
-    <img src="images/saved_collections.png" alt="Logo" width="80" height="80">
+    <img src="docs/images/saved_collections.png" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Syria Daily Brief</h3>
@@ -102,7 +102,7 @@ This project is currently in active development - check back soon for its first 
 <div align="center">
 
 ![Python][Python]
-![React][React]
+![React.js][React.js]
 ![Flask][Flask]
 ![ChatGPT][ChatGPT]
 ![Pandas][Pandas]
@@ -163,23 +163,26 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-Collect data from a spectrum of Arabic-language websites:
-    - [x] Specify timespan for data collection (Last 24 hrs, last week, last 6 months, etc)
-    - [x] Gather data from a single source or cast a wide net to all available websites/outlets
-    - [ ] Expand data collection to dozens of sources
-Manage collected data:
-    - [x] Explore collected data through responsive UI
-    - [ ] Search, tag and filter entries
-    - [ ] Export data to .csv, .xlsx formats
-Machine translations and summaries:
-    - [x] Utilize GPT-3.5/GPT-4 to summarize Arabic datasets
-    - [x] Get quick translations via [ArgosTranslate](https://github.com/argosopentech/argos-translate)
-Use responsive UI to view, edit and manage data:
-    - [x] Save scraped data to personalized collections
-    - [x] View entries in sortable, editable database
-    - [ ] Search data and tag entries of interest
-    - [ ] Personalize data collection operations from frontend
-    - [ ] Deploy project as offline, cross-platform Electron.js app
+- Collect data from a spectrum of Arabic-language websites:
+  - [x] Specify timespan for data collection (Last 24 hrs, last week, last 6 months, etc)
+  - [x] Gather data from a single source or cast a wide net to all available websites/outlets
+  - [ ] Expand data collection to dozens of sources
+
+- Manage collected data:
+  - [x] Explore collected data through responsive UI
+  - [ ] Search, tag and filter entries
+  - [ ] Export data to .csv, .xlsx formats
+
+- Machine translations and summaries:
+  - [x] Utilize GPT-3.5/GPT-4 to summarize Arabic datasets
+  - [x] Get quick translations via [ArgosTranslate](https://github.com/argosopentech/argos-translate)
+
+- Use responsive UI to view, edit and manage data:
+  - [x] Save scraped data to personalized collections
+  - [x] View entries in sortable, editable database
+  - [ ] Search data and tag entries of interest
+  - [ ] Personalize data collection operations from frontend
+  - [ ] Deploy project as offline, cross-platform Electron.js app
 
 <!-- See the [open issues](https://github.com/jclark1913/syria-daily-brief/issues) for a full list of proposed features (and known issues). -->
 
@@ -250,7 +253,7 @@ Project Link: [https://github.com/jclark1913/syria-daily-brief](https://github.c
 [license-url]: https://github.com/jclark1913/syria-daily-brief/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/justin-w-clark
-[product-screenshot]: images/entry_detail.png
+[product-screenshot]: docs/images/entry_detail.png
 [React]: https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
 [React-url]: https://reactjs.org/
@@ -265,7 +268,7 @@ Project Link: [https://github.com/jclark1913/syria-daily-brief](https://github.c
 [Vercel]: https://img.shields.io/badge/vercel-%23000000.svg?&logo=vercel&logoColor=white
 [TypeScript]: https://img.shields.io/badge/typescript-%23007ACC.svg?&logo=typescript&logoColor=white
 [Prisma]: https://img.shields.io/badge/Prisma-3982CE?&logo=Prisma&logoColor=white
-[ChatGPT]: https://img.shields.io/badge/chatGPT-74aa9c?&logo=openai&logoColor=white
+[ChatGPT]: https://img.shields.io/badge/chatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white
 [Python]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
 [Flask]: https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white
 [Pandas]: https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white
