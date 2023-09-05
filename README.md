@@ -60,19 +60,19 @@
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
-    <li>
+    <!-- <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
       </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
+    </li> -->
+    <li><a href="#screenshots">Screenshots</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
+    <!-- <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li> -->
   </ol>
 </details>
 
@@ -80,11 +80,6 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-<div align="center">
-<img src="docs/images/entry_detail.png" width="500">
-<img src="docs/images/entries_list.png" width="500">
-</div>
 
 Tracking news and press releases is time-consuming, particularly when dealing with press releases and propaganda from the regime and non-state actors. As an analyst and perennial Syria-watcher, I want to build tools that ease this process - to streamline the gathering, translating and curating of data so more time can be spent analyzing trends and sentiments rather than monitoring social media feeds. Enter this project.
 
@@ -159,6 +154,14 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
+<!-- SCREENSHOTS -->
+
+## Screenshots
+
+<div align="center">
+<img src="docs/images/entry_detail.png" width="500">
+<img src="docs/images/entries_list.png" width="500">
+</div>
 
 
 <!-- ROADMAP -->
