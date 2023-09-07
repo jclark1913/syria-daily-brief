@@ -26,7 +26,6 @@ from sdb.schemas import (
 )
 import sdb.translation as translation
 
-
 # TODO: Consider Blueprints for API routes in Flask
 
 load_dotenv()
