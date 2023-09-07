@@ -44,6 +44,12 @@ app.json.sort_keys = False
 
 connect_db(app)
 
+# NOTE: Multiprocessesing tests
+
+from multiprocessing import Process
+
+ACTIVE_PROCESSES = {}
+
 
 ############# COLLECTIONS
 
@@ -431,16 +437,19 @@ def scrape_data():
         raise Exception(f"Scraper {e} not found.")
 
     # Activates scrapers
+
+    global ACTIVE_PROCESSES
+    if 'scraper' in ACTIVE_PROCESSES:
+        return jsonify(error="Scraping already in progress."), 400
+
     try:
-        run_selected_scrapers(
-            selections=selected_scrapers,
-            stop_timestamp=stop_timestamp,
-            collection_id=collection_id,
-        )
+        p = Process(target=run_selected_scrapers, args=(selected_scrapers, stop_timestamp, collection_id))
+        p.start()
+        ACTIVE_PROCESSES['scraper'] = p
     except Exception as e:
         return jsonify(error=str(e)), 400
 
-    return jsonify({"message": "Scraping complete."}), 200
+    return jsonify({"message": "Scraping initiated."}), 200
 
 
 @app.get("/api/scrape")
