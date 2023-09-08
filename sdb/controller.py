@@ -14,6 +14,8 @@ from sdb.models import db, Entry, Collection
 
 from enum import Enum
 
+from sdb.processes import STOP_EVENT
+
 
 class ScraperMap(Enum):
     DEZ24 = dez24.DEZ24
@@ -76,6 +78,10 @@ def run_selected_scrapers(selections, stop_timestamp, collection_id):
         # If scraper was unsuccessful, we should get errors as well
         if not data.success:
             errors.append(data.error_message)
+
+        # Check if stop event was set
+        if STOP_EVENT.is_set():
+            break
 
     # Add all our entries to db.
     add_entries_to_db(entries=entries, collection_id=collection_id)

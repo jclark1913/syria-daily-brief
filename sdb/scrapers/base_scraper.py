@@ -8,6 +8,8 @@ from sdb.scrapers.scraping_error import ScrapingError
 from sdb.scrapers.scrape_result import ScrapeResult
 from sdb.scrapers.utils import DEFAULT_HEADERS
 
+from sdb.processes import STOP_EVENT
+
 
 ScraperConfig = namedtuple(
     "ScraperConfig",
@@ -71,7 +73,8 @@ class BaseScraper(ABC):
         url_template = self.config.url_template
 
         while True:
-            print("ENTERED WHILE TRUE LOOP")
+            if STOP_EVENT.is_set():
+                return scrape_result
             # Generate correct url from template
             url = url_template.format(page_num=page_num)
 

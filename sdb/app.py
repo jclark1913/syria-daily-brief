@@ -46,17 +46,9 @@ connect_db(app)
 
 # NOTE: Multiprocessesing tests
 
-from multiprocessing import Process
+from multiprocessing import Process, Event
 
-ACTIVE_PROCESSES = {}
-
-def cleanup_processes():
-    """Cleans up processes dictionary after process is complete."""
-    global ACTIVE_PROCESSES
-    if 'scraper' in ACTIVE_PROCESSES:
-        del ACTIVE_PROCESSES['scraper']
-    return
-
+from sdb.processes import cleanup_processes, ACTIVE_PROCESSES, STOP_EVENT
 
 ############# COLLECTIONS
 
@@ -425,9 +417,10 @@ def generate_excel():
 def scrape_data():
     """Scrapes data from selected websites and saves it to the database"""
 
-    global ACTIVE_PROCESSES
     if 'scraper' in ACTIVE_PROCESSES:
         return jsonify(error="Scraping already in progress."), 400
+
+    STOP_EVENT.clear()
 
     # Gets JSON from request
     data = request.get_json()
@@ -453,7 +446,8 @@ def scrape_data():
         p.start()
         ACTIVE_PROCESSES['scraper'] = p
         p.join()
-        cleanup_processes()
+        if not STOP_EVENT.is_set():
+            cleanup_processes()
     except Exception as e:
         return jsonify(error=str(e)), 400
 
@@ -463,12 +457,13 @@ def scrape_data():
 def cancel_scrape():
     """Terminates any active scraping process."""
 
-    global ACTIVE_PROCESSES
     if 'scraper' not in ACTIVE_PROCESSES:
         return jsonify({"error": "Scraping is not currently in progress."})
 
-    ACTIVE_PROCESSES['scraper'].terminate()
+    STOP_EVENT.set()
+    ACTIVE_PROCESSES['scraper'].join()
     del ACTIVE_PROCESSES['scraper']
+    STOP_EVENT.clear()
     return jsonify({"message": "Scraping terminated."}), 200
 
 
@@ -504,4 +499,5 @@ def handle_marshmallow_validation(err):
 def global_error_handler(e):
     """Global error handler"""
 
+    print("GLOBAL ERROR TRIGGERED")
     return jsonify(error=str(e)), 400
