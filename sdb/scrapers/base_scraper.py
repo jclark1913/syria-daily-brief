@@ -54,6 +54,9 @@ class BaseScraper(ABC):
         except Exception as e:
             raise ScrapingError(f"Failed to get response from {url}", url) from e
 
+        if response.status_code not in range(200, 300):
+            raise ScrapingError(f"Server responded with {response.status_code}", url)
+
         soup = BeautifulSoup(response.content, "html.parser")
 
         return soup
@@ -69,7 +72,6 @@ class BaseScraper(ABC):
 
         while True:
             print("ENTERED WHILE TRUE LOOP")
-            current_timestamp = False
             # Generate correct url from template
             url = url_template.format(page_num=page_num)
 
