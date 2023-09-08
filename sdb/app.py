@@ -50,6 +50,13 @@ from multiprocessing import Process
 
 ACTIVE_PROCESSES = {}
 
+def cleanup_processes():
+    """Cleans up processes dictionary after process is complete."""
+    global ACTIVE_PROCESSES
+    if 'scraper' in ACTIVE_PROCESSES:
+        del ACTIVE_PROCESSES['scraper']
+    return
+
 
 ############# COLLECTIONS
 
@@ -445,6 +452,8 @@ def scrape_data():
         p = Process(target=run_selected_scrapers, args=(selected_scrapers, stop_timestamp, collection_id))
         p.start()
         ACTIVE_PROCESSES['scraper'] = p
+        p.join()
+        cleanup_processes()
     except Exception as e:
         return jsonify(error=str(e)), 400
 
