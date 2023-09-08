@@ -458,7 +458,7 @@ def cancel_scrape():
     """Terminates any active scraping process."""
 
     if 'scraper' not in ACTIVE_PROCESSES:
-        return jsonify({"error": "Scraping is not currently in progress."})
+        return jsonify({"error": "Scraping is not currently in progress."}), 400
 
     STOP_EVENT.set()
     ACTIVE_PROCESSES['scraper'].join()
