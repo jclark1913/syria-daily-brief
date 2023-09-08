@@ -68,6 +68,8 @@ class BaseScraper(ABC):
         url_template = self.config.url_template
 
         while True:
+            print("ENTERED WHILE TRUE LOOP")
+            current_timestamp = False
             # Generate correct url from template
             url = url_template.format(page_num=page_num)
 
