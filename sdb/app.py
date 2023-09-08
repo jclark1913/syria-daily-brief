@@ -412,11 +412,15 @@ def generate_excel():
 
 
 # Scraping
-
+#TODO: Touch up docstrings here
 
 @app.post("/api/scrape")
 def scrape_data():
     """Scrapes data from selected websites and saves it to the database"""
+
+    global ACTIVE_PROCESSES
+    if 'scraper' in ACTIVE_PROCESSES:
+        return jsonify(error="Scraping already in progress."), 400
 
     # Gets JSON from request
     data = request.get_json()
@@ -437,11 +441,6 @@ def scrape_data():
         raise Exception(f"Scraper {e} not found.")
 
     # Activates scrapers
-
-    global ACTIVE_PROCESSES
-    if 'scraper' in ACTIVE_PROCESSES:
-        return jsonify(error="Scraping already in progress."), 400
-
     try:
         p = Process(target=run_selected_scrapers, args=(selected_scrapers, stop_timestamp, collection_id))
         p.start()
@@ -450,6 +449,18 @@ def scrape_data():
         return jsonify(error=str(e)), 400
 
     return jsonify({"message": "Scraping initiated."}), 200
+
+@app.delete("/api/scrape")
+def cancel_scrape():
+    """Terminates any active scraping process."""
+
+    global ACTIVE_PROCESSES
+    if 'scraper' not in ACTIVE_PROCESSES:
+        return jsonify({"error": "Scraping is not currently in progress."})
+
+    ACTIVE_PROCESSES['scraper'].terminate()
+    del ACTIVE_PROCESSES['scraper']
+    return jsonify({"message": "Scraping terminated."}), 200
 
 
 @app.get("/api/scrape")
