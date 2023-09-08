@@ -60,6 +60,21 @@ class ControllerTestCase(TestCase):
         for enum in ScraperMap:
             self.assertIsInstance(enum.value(), enum.value)
 
+    def test_get_available_scrapers(self):
+        """Does get_available_scrapers return list of dictionaries for each available scraper?"""
+
+        scraper_list = get_available_scrapers(map=ScraperMap)
+
+        expected_scraper_list = [
+            {"value": scraper.value, "label": scraper.lable} for scraper in ScraperMap
+        ]
+
+        """Should return correct number of scrapers"""
+        self.assertEqual(len(scraper_list), len(ScraperMap))
+
+        """Should return correct scraper names"""
+        self.assertListEqual(scraper_list, expected_scraper_list)
+
     def test_add_entries_to_db(self):
         """Does add_entries_to_db add given entries to db?"""
 
@@ -191,7 +206,6 @@ class ControllerTestCase(TestCase):
         """Should add no entries to db"""
         self.assertEqual(len(Entry.query.all()), 1)
 
-
     def test_get_available_scrapers(self):
         """Does get_available_scrapers return correct scrapers?"""
 
@@ -205,13 +219,12 @@ class ControllerTestCase(TestCase):
         self.assertEqual(len(scraper_list), 2)
 
         """Should return correct scraper names"""
-        self.assertEqual(scraper_list[0], {"value": "SANA", "label": "SANA (Syrian Arab News Agency)"})
+        self.assertEqual(
+            scraper_list[0],
+            {"value": "SANA", "label": "SANA (Syrian Arab News Agency)"},
+        )
         self.assertEqual(scraper_list[1], {"value": "DEZ24", "label": "Deir Ezzor 24"})
-
-
-
 
     # TODO: Test generate_excel_from_collection (possibly with Pandas snapshot test)
     # def test_generate_excel_from_collection(self):
     #     """Does generate_excel_from_collection generate correct excel file?"""
-
