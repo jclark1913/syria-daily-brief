@@ -1,6 +1,6 @@
 import os
 from unittest import TestCase, mock
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from sdb.controller import ScraperMap
 from sdb.models import db, Collection, Entry
 
@@ -813,7 +813,7 @@ class APIPrintTestCase(TestCase):
 
 
 class APIScrapeTestCase(TestCase):
-    """Tests for /api/scrape"""
+    """Tests for GET & POST /api/scrape"""
 
     def setUp(self):
         """Create test client, add sample data."""
@@ -833,7 +833,26 @@ class APIScrapeTestCase(TestCase):
     def tearDown(self):
         db.session.rollback()
 
+    @patch(
+        "sdb.app.get_available_scrapers",
+        return_value=[{"value": "ENUMNAME", "label": "publication_name"}],
+    )
+    def test_get_scrape_data(self, mock_get_available_scrapers):
+        """Does GET /api/scrape return a list of available sources to scrape data from?"""
+
+        response = self.client.get("/api/scrape")
+        data = response.json
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should return a list of available scrapers"""
+        self.assertTrue(len(data) == 1)
+        self.assertEqual(data[0]["value"], "ENUMNAME")
+        self.assertEqual(data[0]["label"], "publication_name")
+
     @patch("sdb.app.run_selected_scrapers", return_value=None)
+    @patch.dict("sdb.processes.ACTIVE_PROCESSES", {})
     def test_scrape_data(self, mock_run_selected_scrapers):
         """Does POST /api/scrape scrape entries from publications?"""
 
@@ -854,15 +873,36 @@ class APIScrapeTestCase(TestCase):
         """Should return success message"""
         self.assertEqual(
             data["message"],
-            "Scraping complete.",
+            "Scraping initiated.",
         )
 
-        """selected_scrapers should correspond to the correct scrapers"""
-        mock_run_selected_scrapers.assert_called_once_with(
-            selections=[ScraperMap.SANA, ScraperMap.ENABBALADI],
-            stop_timestamp=1234567890,
-            collection_id=self.collection.id,
+    @patch("sdb.app.run_selected_scrapers", return_value=None)
+    @patch.dict("sdb.processes.ACTIVE_PROCESSES", {"scraper": "test"})
+    def test_scrape_data_already_in_progress(self, mock_run_selected_scrapers):
+        """Does POST /api/scrape return error if scraping is already in progress?"""
+
+        response = self.client.post(
+            "/api/scrape",
+            json={
+                "collection_id": self.collection.id,
+                "selected_scrapers": ["SANA", "ENABBALADI"],
+                "stop_timestamp": 1234567890,
+            },
         )
+
+        data = response.json
+
+        """Should return 400 status code"""
+        self.assertEqual(response.status_code, 400)
+
+        """Should return error message"""
+        self.assertEqual(
+            data["error"],
+            "Scraping already in progress.",
+        )
+
+        """Should not call run_selected_scrapers"""
+        mock_run_selected_scrapers.assert_not_called()
 
     @patch("sdb.app.run_selected_scrapers", return_value=None)
     def test_scrape_data_invalid_selections(self, mock_run_selected_scrapers):
@@ -898,7 +938,7 @@ class APIScrapeTestCase(TestCase):
                 "collection_id": "String",
                 "selected_scrapers": "SANA",
                 "stop_timestamp": "String",
-            }
+            },
         )
 
         data = response.json
@@ -913,3 +953,31 @@ class APIScrapeTestCase(TestCase):
 
         """Should not call run_selected_scrapers"""
         mock_run_selected_scrapers.assert_not_called()
+
+    @patch.dict("sdb.processes.ACTIVE_PROCESSES", {})
+    def test_stop_scrape_invalid(self):
+        """Does DELETE /api/scrape return error if no scraping in progress?"""
+
+        response = self.client.delete("/api/scrape")
+
+        data = response.json
+
+        """Should return 400 status code"""
+        self.assertEqual(response.status_code, 400)
+
+        """Should return error message"""
+        self.assertEqual(data["error"], "Scraping is not currently in progress.")
+
+    @patch.dict("sdb.processes.ACTIVE_PROCESSES", {"scraper": Mock()})
+    def test_stop_scrape(self):
+        """Does DELETE /api/scrape stop a scraping process?"""
+
+        response = self.client.delete("/api/scrape")
+
+        data = response.json
+
+        """Should return 200 status code"""
+        self.assertEqual(response.status_code, 200)
+
+        """Should return success message"""
+        self.assertEqual(data["message"], "Scraping terminated.")
