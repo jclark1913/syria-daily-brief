@@ -9,20 +9,16 @@ from marshmallow import ValidationError
 import sdb.ai_utils as ai_utils
 from sdb.controller import (
     generate_excel_from_collection,
-    get_available_scrapers,
-    ScraperMap,
-    run_selected_scrapers,
     add_entries_to_db,
 )
 from sdb.models import db, connect_db, Collection, Entry
 from sdb.schemas import (
-    CollectionSchema,
     SummarizeSchema,
     EntrySchema,
     MigrateSchema,
     PrintSchema,
     TranslateSchema,
-    ScrapeSchema,
+
 )
 import sdb.translation as translation
 
@@ -32,10 +28,12 @@ load_dotenv()
 
 from sdb.blueprints.collections.routes import collection
 from sdb.blueprints.entries.routes import entry
+from sdb.blueprints.scrape.routes import scrape
 
 app = Flask(__name__)
 app.register_blueprint(collection, url_prefix="/api/collections")
 app.register_blueprint(entry, url_prefix="/api/entries")
+app.register_blueprint(scrape, url_prefix="/api/scrape")
 
 ma = Marshmallow(app)
 
@@ -49,72 +47,6 @@ app.config["JSON_SORT_KEYS"] = False
 app.json.sort_keys = False
 
 connect_db(app)
-
-# NOTE: Multiprocessesing tests
-
-from multiprocessing import Process, Event
-
-from sdb.processes import cleanup_processes, ACTIVE_PROCESSES, STOP_EVENT
-
-############# ENTRIES
-
-
-# # TODO: Consider removing collections from route
-# @app.get("/api/entries/<int:entry_id>")
-# def get_single_entry(entry_id):
-#     """Returns single entry from given collection
-
-#     Returns: {id: ..., title: ..., ...}
-#     """
-
-#     curr_entry = Entry.query.get_or_404(entry_id)
-#     entry_schema = EntrySchema()
-
-#     result = entry_schema.dump(curr_entry)
-
-#     return jsonify(result)
-
-
-# @app.post("/api/entries/<int:entry_id>")
-# def edit_single_entry(entry_id):
-#     """Edits single entry
-
-#     Returns: {Entry updated: {id: ..., title: ..., ...}
-#     """
-
-#     data = request.get_json()
-#     curr_entry = Entry.query.get_or_404(entry_id)
-#     entry_schema = EntrySchema()
-
-#     entry_schema.load(data, partial=True)
-
-#     for field, value in data.items():
-#         if hasattr(curr_entry, field):
-#             setattr(curr_entry, field, value)
-
-#     db.session.commit()
-
-#     result = entry_schema.dump(curr_entry)
-
-#     return jsonify({"Updated entry": result})
-
-
-# @app.delete("/api/entries/<int:entry_id>")
-# def delete_single_entry(entry_id):
-#     """Deletes single entry
-
-#     Returns: {Entry deleted: entry_id}
-#     """
-
-#     curr_entry = Entry.query.get_or_404(entry_id)
-#     db.session.delete(curr_entry)
-
-#     db.session.commit()
-
-#     return jsonify({"Deleted entry": entry_id})
-
-
-########### Special operations
 
 
 @app.post("/api/migrate_entries")
@@ -162,8 +94,8 @@ def migrate_entries():
         delete_message = (
             f" {len(entries_original)} entries deleted from {origin_collection.name}."
         )
-        for entry in entries_original:
-            db.session.delete(entry)
+        for e in entries_original:
+            db.session.delete(e)
         db.session.commit()
         message += delete_message
 
@@ -291,76 +223,6 @@ def generate_excel():
         return jsonify(error=str(e)), 400
 
     return jsonify(message="Excel generated"), 200
-
-
-# Scraping
-#TODO: Touch up docstrings here
-
-@app.post("/api/scrape")
-def scrape_data():
-    """Scrapes data from selected websites and saves it to the database"""
-
-    if 'scraper' in ACTIVE_PROCESSES:
-        return jsonify(error="Scraping already in progress."), 400
-
-    STOP_EVENT.clear()
-
-    # Gets JSON from request
-    data = request.get_json()
-
-    # Validate JSON schema
-    scrape_schema = ScrapeSchema()
-    scrape_schema.load(data)
-
-    # Gets parameters from request
-    scraper_strings = data["selected_scrapers"]
-    stop_timestamp = data["stop_timestamp"]
-    collection_id = data["collection_id"]
-
-    # Gets enums corresponding to strings in scraper_strings
-    try:
-        selected_scrapers = [ScraperMap[scraper_str] for scraper_str in scraper_strings]
-    except KeyError as e:
-        raise Exception(f"Scraper {e} not found.")
-
-    # Activates scrapers
-    try:
-        p = Process(target=run_selected_scrapers, args=(selected_scrapers, stop_timestamp, collection_id))
-        p.start()
-        ACTIVE_PROCESSES['scraper'] = p
-        p.join()
-        if not STOP_EVENT.is_set():
-            cleanup_processes()
-    except Exception as e:
-        return jsonify(error=str(e)), 400
-
-    return jsonify({"message": "Scraping initiated."}), 200
-
-@app.delete("/api/scrape")
-def cancel_scrape():
-    """Terminates any active scraping process."""
-
-    if 'scraper' not in ACTIVE_PROCESSES:
-        return jsonify({"error": "Scraping is not currently in progress."}), 400
-
-    STOP_EVENT.set()
-    ACTIVE_PROCESSES['scraper'].join()
-    del ACTIVE_PROCESSES['scraper']
-    STOP_EVENT.clear()
-    return jsonify({"message": "Scraping terminated."}), 200
-
-
-@app.get("/api/scrape")
-def get_scrapers():
-    """Returns JSON containing names of available scrapers.
-
-    Returns:
-        {[{value: ENUMNAME, label: "publication_name"}, ...]}
-    """
-
-    available_scrapers = get_available_scrapers()
-
-    return jsonify(available_scrapers)
 
 
 # Error handlers
