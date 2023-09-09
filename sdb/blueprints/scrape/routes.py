@@ -1,11 +1,10 @@
 from flask import Blueprint, jsonify, request
 
-from multiprocessing import Process, Event
+from multiprocessing import Process
 
 from sdb.controller import get_available_scrapers, ScraperMap, run_selected_scrapers
-from sdb.schemas import ScrapeSchema
-
 from sdb.processes import cleanup_processes, ACTIVE_PROCESSES, STOP_EVENT
+from sdb.schemas import ScrapeSchema
 
 scrape = Blueprint("scrape", __name__)
 
@@ -83,6 +82,7 @@ def cancel_scrape():
     STOP_EVENT.clear()
     return jsonify({"message": "Scraping terminated."}), 200
 
+
 @scrape.get("/")
 def get_scrapers():
     """Returns JSON containing names of available scrapers. This is used for selected scrapers and
@@ -96,4 +96,3 @@ def get_scrapers():
     available_scrapers = get_available_scrapers()
 
     return jsonify(available_scrapers)
-
