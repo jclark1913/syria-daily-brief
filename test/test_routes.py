@@ -108,7 +108,7 @@ class APICollectionsRoutesTestCase(TestCase):
         self.assertEqual(data["description"], "Test Description")
 
     def test_get_collection_invalid(self):
-        """Does GET /api/collections/<collection_id> w/ return error if not found?"""
+        """Does GET /api/collections/<collection_id> w/ invalid id return error if not found?"""
 
         response = self.client.get("/api/collections/1000")
 

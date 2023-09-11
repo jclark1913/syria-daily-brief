@@ -60,7 +60,7 @@ def get_collection(collection_id):
     Returns: {id: 1, name: ..., ...}
     """
 
-    data = Collection.query.get(collection_id)
+    data = Collection.query.get_or_404(collection_id)
     collection_schema = CollectionSchema()
     result = collection_schema.dump(data)
 
