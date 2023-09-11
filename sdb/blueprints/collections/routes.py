@@ -6,7 +6,7 @@ from sdb.schemas import CollectionSchema
 collection = Blueprint("collection", __name__)
 
 
-@collection.get("/")
+@collection.get("")
 def list_collections():
     """API route that returns all collections for a given user.
 
@@ -24,7 +24,7 @@ def list_collections():
     return jsonify(result)
 
 
-@collection.post("/")
+@collection.post("")
 def create_collection():
     """API route that creates a new collection.
 

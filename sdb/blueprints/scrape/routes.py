@@ -9,7 +9,7 @@ from sdb.schemas import ScrapeSchema
 scrape = Blueprint("scrape", __name__)
 
 
-@scrape.post("/")
+@scrape.post("")
 def scrape_data():
     """Initiates the scraping process.
 
@@ -64,7 +64,7 @@ def scrape_data():
     return jsonify({"message": "Scraping initiated."}), 200
 
 
-@scrape.delete("/")
+@scrape.delete("")
 def cancel_scrape():
     """Terminates any active scraping process.
 
@@ -83,7 +83,7 @@ def cancel_scrape():
     return jsonify({"message": "Scraping terminated."}), 200
 
 
-@scrape.get("/")
+@scrape.get("")
 def get_scrapers():
     """Returns JSON containing names of available scrapers. This is used for selected scrapers and
     displaying publication names on the frontend..
