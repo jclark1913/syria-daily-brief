@@ -22,8 +22,6 @@ from sdb.schemas import (
 )
 import sdb.translation as translation
 
-# TODO: Consider Blueprints for API routes in Flask
-
 load_dotenv()
 
 from sdb.blueprints.collections.routes import collection
@@ -34,11 +32,11 @@ app = Flask(__name__)
 app.register_blueprint(collection, url_prefix="/api/collections")
 app.register_blueprint(entry, url_prefix="/api/entries")
 app.register_blueprint(scrape, url_prefix="/api/scrape")
+CORS(app)
 
 ma = Marshmallow(app)
 
 # NOTE: Temporary fix while in development
-CORS(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = False
