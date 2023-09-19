@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
+from flask_migrate import Migrate
 from marshmallow import ValidationError
 
 import sdb.ai_utils as ai_utils
@@ -35,6 +36,7 @@ app.register_blueprint(scrape, url_prefix="/api/scrape")
 CORS(app)
 
 ma = Marshmallow(app)
+migrate = Migrate(app, db)
 
 # NOTE: Temporary fix while in development
 
