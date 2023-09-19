@@ -16,7 +16,6 @@ class CollectionSchema(ma.Schema):
     entries: fields.Nested = fields.Nested("EntrySchema", many=True, dump_only=True)
 
 
-
 class EntrySchema(ma.Schema):
     class Meta:
         ordered = True
@@ -60,6 +59,7 @@ class MigrateSchema(ma.Schema):
     destination_collection_id = fields.Integer(required=True)
     delete_on_move = fields.Boolean(required=False)
 
+
 class PrintSchema(ma.Schema):
     class Meta:
         ordered = True
@@ -82,6 +82,7 @@ class SummarizeSchema(ma.Schema):
         fields = ["entry_ids"]
 
     entry_ids = fields.List(fields.Integer(), required=True)
+
 
 class ScrapeSchema(ma.Schema):
     class Meta:
