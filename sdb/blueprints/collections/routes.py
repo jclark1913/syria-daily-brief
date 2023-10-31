@@ -16,8 +16,27 @@ def list_collections():
         ...
         ]
     """
+    search_term = request.args.get("search_term", None)
+    order = request.args.get("order", "asc")
 
-    data = Collection.query.all()
+    # Base query
+    query = Collection.query
+
+    if search_term:
+        query = query.filter(
+            (Collection.name.ilike(f"%{search_term}%"))
+            | (Collection.description.ilike(f"%{search_term}%"))
+        )
+
+    # handle order
+    if order == "desc":
+        query = query.order_by(Collection.created_at.desc())
+    else:
+        query = query.order_by(Collection.created_at.asc())
+
+    # Execute query
+    data = query.all()
+
     collection_schema = CollectionSchema(many=True)
     result = collection_schema.dump(data)
 
