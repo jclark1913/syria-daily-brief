@@ -8,7 +8,8 @@ collection = Blueprint("collection", __name__)
 
 @collection.get("")
 def list_collections():
-    """API route that returns all collections for a given user.
+    """API route that returns all saved collections with optional order and filtering
+    by search term.
 
     Returns: [
         {id: 1, name: ..., ...},
@@ -16,23 +17,25 @@ def list_collections():
         ...
         ]
     """
-    search_term = request.args.get("search_term", None)
+
+    search_term = request.args.get("search", None)
     order = request.args.get("order", "asc")
 
     # Base query
     query = Collection.query
 
+    # Apply search term if present
     if search_term:
         query = query.filter(
             (Collection.name.ilike(f"%{search_term}%"))
             | (Collection.description.ilike(f"%{search_term}%"))
         )
 
-    # handle order
-    if order == "desc":
-        query = query.order_by(Collection.created_at.desc())
-    else:
+    # Handle order (defaults to desc)
+    if order == "asc":
         query = query.order_by(Collection.created_at.asc())
+    else:
+        query = query.order_by(Collection.created_at.desc())
 
     # Execute query
     data = query.all()
