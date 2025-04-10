@@ -1,3 +1,9 @@
+**_Note (April 2025):_** _This repository is no longer maintained. A lot has happened since I started this project in summer 2023. For starters: the Assad regime totally collapsed in December 2024, upending the former government decades long control over the country's media. The news and media landscape is totally different now - and I think I'd probably approach a media monitoring project like this differently were I to start it today._
+
+_This was also my first "big" project when I was diving deeper into web scraping and Python. I used it as a launching point to experiment with IP rotation, asynchronous functions, Pandas and just about every web scraping framework you can think of. Same with the React frontend - to build my ideal dashboard I messed around with custom hooks, component libraries, and a lot of trial and error to get things where I wanted them to be. I stopped maintaining this project around the time I took on my first professional software work. Looking back on it now I'd have approached the design a bit differently and probably tried to lean into AWS and serverless functions right from the start._
+
+_If you like the direction of this project and would like to revive it or to retool any of the code you find here, please feel free to do so._
+
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
 <!--
@@ -79,12 +85,6 @@
 
 
 <!-- ABOUT THE PROJECT -->
-
-**_Note (April 2025):_** _This repository is no longer maintained. A lot has happened since I started this project in summer 2023. For starters: the Assad regime totally collapsed in December 2024, upending the former government decades long control over the country's media. The news and media landscape is totally different now - and I think I'd probably approach a media monitoring project like this differently were I to start it today._
-
-_This was also my first "big" project when I was diving deeper into web scraping and Python. I used it as a launching point to experiment with IP rotation, asynchronous functions, Pandas and just about every web scraping framework you can think of. Same with the React frontend - to build my ideal dashboard I messed around with custom hooks, component libraries, and a lot of trial and error to get things where I wanted them to be. I stopped maintaining this project around the time I took on my first professional software work. Looking back on it now I'd have approached the design a bit differently and probably tried to lean into AWS and serverless functions right from the start._
-
-_If you like the direction of this project and would like to revive it or to retool any of the code you find here, please feel free to do so._
 
 ## About The Project
 
